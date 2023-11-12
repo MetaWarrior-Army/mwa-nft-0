@@ -37,4 +37,8 @@ compile with hardhat.
 
 ## Run webapp
 
+Edit `src/config.example.jsx` and save as `src/config.jsx`.
+
+Run WebApp
+
 `npm run dev`
