@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3001",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 3001",
     "lint": "next lint"
   },
   "dependencies": {
@@ -22,6 +22,7 @@
     "kubo-rpc-client": "^3.0.1",
     "next": "13.5.6",
     "next-auth": "^4.24.3",
+    "pg": "^8.11.3",
     "react": "^18",
     "react-dom": "^18",
     "viem": "^1.16.6",
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/pg": "^8.10.9",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",

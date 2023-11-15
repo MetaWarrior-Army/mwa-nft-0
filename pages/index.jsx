@@ -22,14 +22,22 @@ import Script from "next/script";
 import { project } from '../src/config.jsx';
 // BLOCKED USERNAMES
 import { blocked_users } from "../src/blocked_usernames.jsx";
-
+// Push
+import { push } from 'next/router';
 // For cleaning username input
 const word_re = /^\w+$/;
+// IPFS API Endpoint
+const ipfsApiUrl = 'https://nft.metawarrior.army/api/ipfs';
+const isUserUrl = 'https://nft.metawarrior.army/api/isuser';
+const storeTxUrl = 'https://nft.metawarrior.army/api/storetxhash';
 
 // MAIN APP
 //
 // index
 function Index({}) {
+    const [ isUser, setIsUser ] = useState(false);
+    const [ txHash, setTxHash ] = useState(false);
+    
     // We set this after the CID has been established (IPFS)
     const [ nftReady, setNftReady ] = useState(false);
     // Setup Web3 Connectors
@@ -45,6 +53,35 @@ function Index({}) {
             web3_success.innerText = "Wallet connected!";
             web3_error.innerText = "";
             jdenticon.update('#avatar',address);
+
+            // Check for current user
+            console.log("Checking for current user");
+            fetch(isUserUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-type': 'application/json',
+                },
+                body: JSON.stringify({address: address})
+                }).then((response) => {
+                    return response.json();            
+                }).then((data) => {
+                    if(data.username){
+                        if(data.username == 'NOADDRESS'){
+                            push('https://www.metawarrior.army/dev/login.php');
+                        }
+                        if(data.tx_hash){
+                            setIsUser(data.username);
+                            if(data.tx_hash != ''){
+                                setTxHash(data.tx_hash);
+                            }
+                        }
+                        else{
+                            setIsUser(data.username);   
+                        }
+                    }
+                    else{
+                    }
+            });
         }
     });
     const { disconnectAsync } = useDisconnect();
@@ -71,6 +108,7 @@ function Index({}) {
     const { isSuccess } = useWaitForTransaction({
         hash: data?.hash,
     })
+
     // Project configuration
     const page_title = "Mint NFT "+project.PROJECT_NAME;
     const page_icon_url = project.PROJECT_ICON_URL;
@@ -86,9 +124,11 @@ function Index({}) {
             error_msg.innerText = "Username cannot be blank.";
             return false;
         }
+
+        console.log(username.value);
         
         // Create the IPFS url
-        await fetch('http://localhost:3000/api/ipfs', {
+        await fetch(ipfsApiUrl, {
             method: 'POST',
             headers: {
                 'Content-type': 'application/json',
@@ -101,17 +141,12 @@ function Index({}) {
                 NFT = data.cid;
             });
         
-        /*
-        console.log("NFT: "+NFT);
-        console.log("Username: "+username.value);
-        console.log("Address: "+address);
-        */
-        
         // Set NFT CID in state
         setNftReady(NFT);
 
         // Execute transaction
         write();
+        
     }
 
     // CONNECT WEB3 WALLET
@@ -194,9 +229,60 @@ function Index({}) {
     // The React UI works fine after that.
     try{
         const web3_success = document.getElementById('web3_success');
+        const mint_button = document.getElementById('buildNFT');
+        const username_prompt = document.getElementById('username_prompt');
         if(data){
+            username_prompt.innerHTML = '<span>Congrats! You are now a member of MetaWarrior Army!</span><br><span class="small">Back to your <a href="https://www.metawarrior.army/profile" class="link-light">profile</a>.</span>'
             web3_success.innerHTML = '<span>View <a href="'+project.BLOCKEXPLORER+data.hash+'" class="link-light" target="_blank">transaction</a>.</span>';
+            // Update user
+            var hash = data.hash;
+            fetch(storeTxUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-type': 'application/json',
+                },
+                body: JSON.stringify({address: address, tx_hash: hash })
+                });
+                mint_button.hidden = true;
+            
         } 
+    }
+    catch(error){}
+
+    try{
+        if(isConnected){
+            // Need to validate isUser and txHash
+            // Check for current user
+            console.log("Checking for current user");
+            fetch(isUserUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-type': 'application/json',
+                },
+                body: JSON.stringify({address: address})
+                }).then((response) => {
+                    return response.json();            
+                }).then((data) => {
+                    if(data.username){
+                        if(data.username == 'NOADDRESS'){
+                            push('https://www.metawarrior.army/dev/login.php');
+                        }
+                        if(data.tx_hash){
+                            setIsUser(data.username);
+                            if(data.tx_hash != ''){
+                                setTxHash(data.tx_hash);
+                            }
+                        }
+                        else{
+                            setIsUser(data.username);
+                        }
+                    }
+                    else{
+                    }
+            });
+        }
+        else{
+        }
     }
     catch(error){}
 
@@ -214,13 +300,26 @@ function Index({}) {
           <img className="rounded w-25 mx-auto" src={page_icon_url} alt="image cap"/>
           <div className="card-body">
             <h5 className="card-title"><u>Mint User NFT</u></h5>
+            <div id="avatar_div">
+                    <svg width="80" id="avatar" height="80" data-jdenticon-value={address? address : ''}></svg>
+                </div>
             
             <div id="username_prompt">
                 {
-                    data ? (
+                    txHash ? (
+                        <>
+                        <span>Congrats! You are now a member of MetaWarrior Army!</span>
+                        <br></br>
+                        <span className="small">You can view your mint transaction <a href={("https://testnet-zkevm.polygonscan.com/tx/"+txHash)} className="link-light" target="_blank">here</a>.</span>
+                        <br></br>
+                        <span className="small">You can view your NFT at your <a href="https://www.metawarrior.army/profile" className="link-light">profile</a>.</span>
+                        </>
+                    ) : isUser ? (
+                        <span>You're username <b>{(isUser)}</b> has been secured. However you still need to mint your NFT to join MetaWarrior Army.</span>
+                    ) : data ? (
                         <span>Mint executed for: <p className="text-info">{address? address : null}</p></span>
                     ) : isConnected ? (
-                        <span>Choose a username for your address: <p className="text-info">{address? address : null}</p></span>
+                        <span>Choose a username for your wallet address: <p className="text-info">{address? address : null}</p></span>
                     ) : (
                         <span>Choose your username at MetaWarrior Army</span>
                     )
@@ -230,20 +329,26 @@ function Index({}) {
             <hr/>
             <br></br>
 
-            <div id="form" hidden={isConnected ? data ? true : false : true}>
-                <div id="avatar_div">
-                    <svg width="80" id="avatar" height="80" data-jdenticon-value={address? address : ''}></svg>
-                </div>
+            <div id="form" hidden=
+                {
+                    txHash ? true :
+                    isUser ? false :
+                    data ? true :
+                    isConnected ? false : true
+                }>
+                
                 <div className="form-group">
                     <div className="input-group mb-2">
                         <div className="input-group-prepend">
-                            <div className="input-group-text">Username</div>
+                            <div className="input-group-text" hidden={isUser ? true : false}>Username</div>
                         </div>
                         <input type="text" 
                             name="username" 
                             className="form-control" 
                             id="username" 
-                            onChange={screenUsername}></input>
+                            onChange={screenUsername}
+                            hidden={isUser ? true : false}
+                            defaultValue={isUser ? isUser : ''}></input>
                     </div>
                     <br></br>
                     <button id="zkevm" type="submit" 
@@ -260,14 +365,14 @@ function Index({}) {
                         disabled={
                             chain ?
                             (chain.id != project.BLOCKCHAIN_ID) ? true : false : false
-                        }>Build NFT</button>
+                        }>Mint NFT</button>
                     <br></br>
                     <p className="small text-danger" id="error_msg"></p>
                     
                 </div>
             </div>
 
-            <div id="connector_group" hidden={isConnected ? true : false}>
+            <div id="connector_group" hidden={ isConnected ? true : false }>
                 <h5>Connect your wallet.</h5>
                 {connectors.map((connector) => (
                     // use this div to help us style the buttons

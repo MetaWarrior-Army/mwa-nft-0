@@ -9,6 +9,7 @@ import { InjectedConnector } from 'wagmi/connectors/injected'
 
 // Blockchain providers
 import { publicProvider } from "wagmi/providers/public";
+import { infuraProvider } from 'wagmi/providers/infura';
 
 // chains
 import { polygon } from "wagmi/chains";
@@ -25,7 +26,7 @@ import { project } from '../src/config.jsx';
 // Configure chains
 const { chains, publicClient, webSocketPublicClient } = configureChains(
     [polygon],
-    [publicProvider()]
+    [infuraProvider({ apiKey: project.INFURA_API_KEY }),publicProvider()]
   );
   
   // Setup Web3 connectors
