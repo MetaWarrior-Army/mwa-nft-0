@@ -18,6 +18,7 @@ MetaWarrior Army NFT
 "kubo-rpc-client": "^3.0.1",
 "next": "13.5.6",
 "next-auth": "^4.24.3",
+"pg": "^8.11.3",
 "react": "^18",
 "react-dom": "^18",
 "viem": "^1.16.6",
