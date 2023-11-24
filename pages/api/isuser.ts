@@ -1,5 +1,8 @@
 // NextJS API Helpers
 import type { NextApiRequest, NextApiResponse } from 'next'
+//Next Auth Server Session
+import { getServerSession, NextAuthOptions } from "next-auth";
+import { authOptions } from "./auth/[...nextauth]";
 //DB Connection
 import { Pool } from "pg";
 const isuser_db_conn = new Pool({
@@ -12,13 +15,25 @@ const isuser_db_conn = new Pool({
 
 type ResponseData = {
   username: string,
-  tx_hash: string
+  tx_hash: string,
+  status: string
 }
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ResponseData>
 ) {
+  const session = await getServerSession(req,res,authOptions as NextAuthOptions);
+  
+  if(session){
+    //console.log(session);
+  }
+  else{
+    console.log("No Session");
+    res.status(500);
+    return;
+  }
+
   const { nonce, address } = req.body;
 
   if(req.method == 'POST'){
@@ -39,26 +54,28 @@ export default async function handler(
                     if(search_result.rows[0].nft_0_tx){
                       res.status(200).json({ 
                         username: search_result.rows[0].username,
-                        tx_hash: search_result.rows[0].nft_0_tx
+                        tx_hash: search_result.rows[0].nft_0_tx,
+                        status: "Minted"
                       });
                     }
                     else{
                       res.status(200).json({ 
                         username: search_result.rows[0].username,
-                        tx_hash: ''
+                        tx_hash: '',
+                        status: "usernameSecured"
                       });
                     }
                     
                 }
                 else{
                     //console.log("NEW USER");
-                    res.status(200);
+                    res.status(200).json({username: '',tx_hash: '', status: 'newUser'});
                 }
             }
             else{
                 // This shouldn't happen because we're supposed to authenticate users and record their address then during auth
                 //console.log("RESULTS ERROR");
-                res.status(200).json({ username: 'NOADDRESS', tx_hash: ''});
+                res.status(200).json({ username: '', tx_hash: '', status: 'unknownUser'});
             }
           }
         }

@@ -12,7 +12,7 @@ import { publicProvider } from "wagmi/providers/public";
 import { infuraProvider } from 'wagmi/providers/infura';
 
 // chains
-import { polygon } from "wagmi/chains";
+import { polygon, polygonZkEvmTestnet } from "wagmi/chains";
 
 // Next Auth Session Control
 import { SessionProvider } from "next-auth/react";

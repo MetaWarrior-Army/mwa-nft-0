@@ -4,9 +4,11 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { create, globSource } from 'kubo-rpc-client'
 // PROJECT CONFIG
 import { project } from '../../src/config.jsx';
-
 // DB Connection
 import { Pool } from "pg";
+//Next Auth Server Session
+import { getServerSession, NextAuthOptions } from "next-auth";
+import { authOptions } from "./auth/[...nextauth]";
 
 const ipfs_db_conn = new Pool({
   user: process.env.PGSQL_USER,
@@ -26,13 +28,25 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ResponseData>
 ) {
+
+  const session = await getServerSession(req,res,authOptions as NextAuthOptions);
+  
+  if(session){
+    //console.log(session);
+  }
+  else{
+    console.log("No Session");
+    res.status(500);
+    return;
+  }
+  
   const { test, nonce, username, address } = req.body
   
   if(req.method == 'POST'){
-    console.log("test: "+test);
-    console.log("nonce: "+nonce);
-    console.log("username: "+username);
-    console.log("address: "+address);
+    //console.log("test: "+test);
+    //console.log("nonce: "+nonce);
+    //console.log("username: "+username);
+    //console.log("address: "+address);
     
     // For generating user avatar
     // Write avatar to filesystem
@@ -45,7 +59,7 @@ export default async function handler(
     const filename = process.env.NFT_AVATAR_PATH+address+process.env.NFT_IMAGE_FILEEXT;
     fs.writeFileSync(filename,avatar);
     
-    console.log("uploadIPFS");
+    //console.log("uploadIPFS");
     //console.log(filename);
     var nftJSON = {};
     var nftCID;
@@ -57,7 +71,7 @@ export default async function handler(
       for await (let result of avatar_cid) {
         if(result_count == 0){
           avatarCID = result.cid;
-          console.log('avatar cid: '+String(avatarCID.toString()));
+          //console.log('avatar cid: '+String(avatarCID.toString()));
         }
       }
 
@@ -92,7 +106,7 @@ export default async function handler(
         for await (let result of nft_cid) {
           if(result_count == 0){
             nftCID = result.cid;
-            console.log('nft cid: '+String(nftCID.toString()));
+            //console.log('nft cid: '+String(nftCID.toString()));
           }
         }
                
@@ -147,6 +161,7 @@ export default async function handler(
     }
     
   }  
+  
 
 
 }

@@ -13,11 +13,19 @@ import { useAccount,
     useContractWrite, 
     usePrepareContractWrite,
     useWaitForTransaction,
-    useSwitchNetwork } from "wagmi";
+    useSwitchNetwork,
+    useWalletClient } from "wagmi";
+// chains
+import { polygon, polygonZkEvmTestnet } from "wagmi/chains";
 // NextJS helpers
 import { useEffect, useState, useRef } from 'react';
 import Head  from "next/head";
 import Script from "next/script";
+//Next Auth Server Session
+import { useSession, getCsrfToken, signIn, signOut } from "next-auth/react";
+import { getToken } from "next-auth/jwt"
+import { getServerSession } from "next-auth";
+import { authOptions } from "./api/auth/[...nextauth]";
 // PROJECT CONFIG
 import { project } from '../src/config.jsx';
 // BLOCKED USERNAMES
@@ -34,7 +42,9 @@ const storeTxUrl = 'https://nft.metawarrior.army/api/storetxhash';
 // MAIN APP
 //
 // index
-function Index({}) {
+function Index({ session, token }) {
+    
+    console.log(session);
     const [ isUser, setIsUser ] = useState(false);
     const [ txHash, setTxHash ] = useState(false);
     
@@ -47,6 +57,7 @@ function Index({}) {
             const web3_error = document.getElementById('web3_error');
             web3_error.innerText = error.message;
         },
+        // This runs the first time a user connects their wallet
         onSuccess(data) {
             const web3_success = document.getElementById('web3_success');
             const web3_error = document.getElementById('web3_error');
@@ -67,7 +78,7 @@ function Index({}) {
                 }).then((data) => {
                     if(data.username){
                         if(data.username == 'NOADDRESS'){
-                            push('https://www.metawarrior.army/dev/login.php');
+                            push('https://www.metawarrior.army/dev/signup.php');
                         }
                         if(data.tx_hash){
                             setIsUser(data.username);
@@ -107,7 +118,14 @@ function Index({}) {
     const { data, error, isError, write } = useContractWrite(config);
     const { isSuccess } = useWaitForTransaction({
         hash: data?.hash,
-    })
+    });
+    const { data: walletClient } = useWalletClient();
+
+    // Function for adding the chain to the user's wallet if they don't have it
+    const addChain = async () => {
+        await walletClient.addChain({ chain: polygonZkEvmTestnet });
+        await switchNetwork(project.BLOCKCHAIN_ID);
+    }
 
     // Project configuration
     const page_title = "Mint NFT "+project.PROJECT_NAME;
@@ -143,6 +161,9 @@ function Index({}) {
         
         // Set NFT CID in state
         setNftReady(NFT);
+
+        const button = document.getElementById("buildNFT");
+        button.hidden = true;
 
         // Execute transaction
         write();
@@ -224,6 +245,13 @@ function Index({}) {
         console.log("SUCCESS");
     }
 
+    const logout = async () => {
+        const logoutURL = "https://auth.metawarrior.army/oauth2/sessions/logout?client_id="+project.MWA_AUTH_CLIENTID+"&id_token_hint="+token.id_token+"&post_logout_redirect_uri="+encodeURIComponent("https://nft.metawarrior.army/logout");
+        console.log(logoutURL);
+        push(logoutURL);
+        
+    };
+
     // Another UI Workaround
     // Not sure why I have to do this for the first time someone connects a wallet. 
     // The React UI works fine after that.
@@ -263,15 +291,14 @@ function Index({}) {
                 }).then((response) => {
                     return response.json();            
                 }).then((data) => {
-                    if(data.username){
-                        if(data.username == 'NOADDRESS'){
-                            push('https://www.metawarrior.army/dev/login.php');
+                    if(data){
+                        if(data.status == 'unknownUser'){
+                            push('https://www.metawarrior.army/dev/signup.php');
+                            //signIn();
                         }
-                        if(data.tx_hash){
+                        if(data.tx_hash != ''){
                             setIsUser(data.username);
-                            if(data.tx_hash != ''){
                                 setTxHash(data.tx_hash);
-                            }
                         }
                         else{
                             setIsUser(data.username);
@@ -315,7 +342,7 @@ function Index({}) {
                         <span className="small">You can view your NFT at your <a href="https://www.metawarrior.army/profile" className="link-light">profile</a>.</span>
                         </>
                     ) : isUser ? (
-                        <span>You're username <b>{(isUser)}</b> has been secured. However you still need to mint your NFT to join MetaWarrior Army.</span>
+                        <span>You're username <b>{(isUser)}</b> has been secured. Check your wallet to finish minting your NFT.</span>
                     ) : data ? (
                         <span>Mint executed for: <p className="text-info">{address? address : null}</p></span>
                     ) : isConnected ? (
@@ -351,8 +378,9 @@ function Index({}) {
                             defaultValue={isUser ? isUser : ''}></input>
                     </div>
                     <br></br>
+                    
                     <button id="zkevm" type="submit" 
-                        onClick={() => switchNetwork(project.BLOCKCHAIN_ID)} 
+                        onClick={() => addChain()} 
                         className="btn btn-outline-secondary btn-lg w-100" 
                         hidden={
                             chain ? 
@@ -362,10 +390,23 @@ function Index({}) {
                         onClick={build_nft} 
                         className="btn btn-outline-secondary btn-lg w-100" 
                         hidden={isConnected ? false : true} 
-                        disabled={
+                        disabled={data ? true :
+                            !session ? true :
                             chain ?
                             (chain.id != project.BLOCKCHAIN_ID) ? true : false : false
                         }>Mint NFT</button>
+                    <button id="login" type="submit"
+                        onClick={() => signIn()}
+                        className="btn btn-outline-secondary btn-lg w-100"
+                        hidden={!session ? false : true}>Login
+                    </button>
+                    <button id="logout" type="submit"
+                        onClick={() => logout()}
+                        className="btn btn-outline-secondary btn-lg w-100"
+                        hidden={
+                            !session ? true: false
+                        }>Logout
+                    </button>
                     <br></br>
                     <p className="small text-danger" id="error_msg"></p>
                     
@@ -412,6 +453,25 @@ function Index({}) {
         </>
       );
 }
+
+//             //
+// SERVER SIDE //
+//             //
+export const getServerSideProps = (async (context) => {
+    const req = context.req;
+    const res = context.res;
+    const session = await getServerSession(req,res,authOptions);
+    const token = await getToken({req});
+    //console.log(token);
+
+    if(session && token){
+        //console.log(token);
+        return {props: { session: session, token: token }};
+    }
+    else{
+        return {props: { }};
+    }
+});
 
 export default Index;
 

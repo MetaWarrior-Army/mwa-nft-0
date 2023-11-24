@@ -1,5 +1,8 @@
 // NextJS API Helpers
 import type { NextApiRequest, NextApiResponse } from 'next'
+//Next Auth Server Session
+import { getServerSession, NextAuthOptions } from "next-auth";
+import { authOptions } from "./auth/[...nextauth]";
 //DB Connection
 import { Pool } from "pg";
 const storetx_db_conn = new Pool({
@@ -11,13 +14,24 @@ const storetx_db_conn = new Pool({
 });
 
 type ResponseData = {
-  message: boolean
+  success: boolean
 }
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ResponseData>
 ) {
+  const session = await getServerSession(req,res,authOptions as NextAuthOptions);
+  
+  if(session){
+    //console.log(session);
+  }
+  else{
+    console.log("No Session");
+    res.status(500);
+    return;
+  }
+
   const { nonce, address, tx_hash } = req.body;
 
   if(req.method == 'POST'){
@@ -27,18 +41,22 @@ export default async function handler(
         const update_result = await storetx_db_conn.query(update_query);
         if(update_result.rowCount != null){
             if(update_result.rowCount > 0){
-                res.status(200);
+                res.status(200).json({success: true});
+                return;
             }
             else{
                 res.status(500);
+                return;
             }
         }
     }
     else{
         res.status(500);
+        return;
     }
   }
   else{
     res.status(500);
+    return;
   }
 }
