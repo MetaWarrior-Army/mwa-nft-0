@@ -32,6 +32,7 @@ import { project } from '../src/config.jsx';
 import { blocked_users } from "../src/blocked_usernames.jsx";
 // Push
 import { push } from 'next/router';
+import { exit } from "process";
 // For cleaning username input
 const word_re = /^\w+$/;
 // IPFS API Endpoint
@@ -43,11 +44,11 @@ const storeTxUrl = 'https://nft.metawarrior.army/api/storetxhash';
 //
 // index
 function Index({ session, token }) {
-    
-    console.log(session);
+    // Project configuration
+    const page_title = "Mint NFT "+project.PROJECT_NAME;
+    const page_icon_url = project.PROJECT_ICON_URL;
     const [ isUser, setIsUser ] = useState(false);
     const [ txHash, setTxHash ] = useState(false);
-    
     // We set this after the CID has been established (IPFS)
     const [ nftReady, setNftReady ] = useState(false);
     // Setup Web3 Connectors
@@ -63,7 +64,7 @@ function Index({ session, token }) {
             const web3_error = document.getElementById('web3_error');
             web3_success.innerText = "Wallet connected!";
             web3_error.innerText = "";
-            jdenticon.update('#avatar',address);
+            jdenticon.update('#avatar',data.account);
 
             // Check for current user
             console.log("Checking for current user");
@@ -72,22 +73,22 @@ function Index({ session, token }) {
                 headers: {
                     'Content-type': 'application/json',
                 },
-                body: JSON.stringify({address: address})
+                body: JSON.stringify({address: data.account})
                 }).then((response) => {
                     return response.json();            
                 }).then((data) => {
                     if(data.username){
-                        if(data.username == 'NOADDRESS'){
+                        if(data.status == 'unknownUser'){
                             push('https://www.metawarrior.army/dev/signup.php');
                         }
-                        if(data.tx_hash){
-                            setIsUser(data.username);
-                            if(data.tx_hash != ''){
-                                setTxHash(data.tx_hash);
-                            }
+                        else if(data.status == 'newUser'){
                         }
-                        else{
+                        else if(data.status == 'usernameSecured') {
                             setIsUser(data.username);   
+                        }
+                        else if(data.status == 'Minted'){
+                            setIsUser(data.username);
+                            setTxHash(data.tx_hash);
                         }
                     }
                     else{
@@ -121,68 +122,9 @@ function Index({ session, token }) {
     });
     const { data: walletClient } = useWalletClient();
 
-    // Function for adding the chain to the user's wallet if they don't have it
-    const addChain = async () => {
-        await walletClient.addChain({ chain: polygonZkEvmTestnet });
-        await switchNetwork(project.BLOCKCHAIN_ID);
-    }
-
-    // Project configuration
-    const page_title = "Mint NFT "+project.PROJECT_NAME;
-    const page_icon_url = project.PROJECT_ICON_URL;
-
-    //Build NFT
-    const build_nft = async () => {
-        //console.log("Building NFT");
-        var NFT;
-        // Make sure username isn't blank
-        const username = document.getElementById('username');
-        if(username.value.length < 1){
-            const error_msg = document.getElementById('error_msg');
-            error_msg.innerText = "Username cannot be blank.";
-            return false;
-        }
-
-        console.log(username.value);
-        
-        // Create the IPFS url
-        await fetch(ipfsApiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-type': 'application/json',
-            },
-            body: JSON.stringify({test: 'test', username: username.value, address: address})
-            }).then((response) => {
-                return response.json();            
-            }).then((data) => {
-                console.log(data);
-                NFT = data.cid;
-            });
-        
-        // Set NFT CID in state
-        setNftReady(NFT);
-
-        const button = document.getElementById("buildNFT");
-        button.hidden = true;
-
-        // Execute transaction
-        write();
-        
-    }
-
-    // CONNECT WEB3 WALLET
-    const connectWallet = async ({connector}) => {
-        // if connected, disconnect
-        if (isConnected) {
-          await disconnectAsync();
-        }
-        // get account and chain data
-        const { account, chain } = await connectAsync({connector: connector, chainId: project.BLOCKCHAIN_ID});
-    };
-
     // SCREEN USERNAMES
     // Later we need to check a DB of usernames
-    function screenUsername (event) {
+    const screenUsername = async (event) => {
         const error_msg = document.getElementById('error_msg');
         const button = document.getElementById('buildNFT');
 
@@ -211,7 +153,142 @@ function Index({ session, token }) {
             error_msg.innerText = "";
             button.disabled = false;
         }
+
+        // Check for unique username
+        fetch('https://nft.metawarrior.army/api/isunique', {
+            method: 'POST',
+            headers: {
+                'Content-type': 'application/json',
+            },
+            body: JSON.stringify({username: event.target.value})
+            }).then((response) => {
+                return response.json();            
+            }).then((data) => {
+                if(data){
+                    if(data.status == 'error'){
+                        console.log("check isunique error");
+                    }
+                    else{
+                        if(data.unique == true){
+                            button.disabled = false;
+                            error_msg.innerText = 'Username available.';
+                        }
+                        else{
+                            button.disabled = true;
+                            error_msg.innerText = 'Username is taken.';
+                        }
+
+                    }
+                }
+                else{
+                }
+        });
     };
+
+    // CONNECT WEB3 WALLET
+    const connectWallet = async ({connector}) => {
+        // if connected, disconnect
+        if (isConnected) {
+          await disconnectAsync();
+        }
+        // get account and chain data
+        const { account, chain } = await connectAsync({connector: connector, chainId: project.BLOCKCHAIN_ID});
+    };
+
+    // Disconnect Wallet Button
+    const disconnectWallet = async () => {
+        await disconnectAsync();
+        return true;
+    }
+
+    const logout = async () => {
+        const logoutURL = "https://auth.metawarrior.army/oauth2/sessions/logout?client_id="+project.MWA_AUTH_CLIENTID+"&id_token_hint="+token.id_token+"&post_logout_redirect_uri="+encodeURIComponent("https://nft.metawarrior.army/logout");
+        console.log(logoutURL);
+        push(logoutURL);
+        
+    };
+
+       // Function for adding the chain to the user's wallet if they don't have it
+    const addChain = async () => {
+        await walletClient.addChain({ chain: polygonZkEvmTestnet });
+        switchNetwork(project.BLOCKCHAIN_ID);
+    }
+
+    //Build NFT
+    const build_nft = async () => {
+        //console.log("Building NFT");
+        var NFT;
+        // Make sure username isn't blank
+        const username = document.getElementById('username');
+        const usernameLowered = String(username.value).toLowerCase();
+        const error_msg = document.getElementById('error_msg');
+        const buildButton = document.getElementById('buildNFT');
+
+        // Make sure we have something
+        if(username.value.length < 1){
+            const error_msg = document.getElementById('error_msg');
+            error_msg.innerText = "Username cannot be blank.";
+            return false;
+        }
+
+        // Check for unique username
+        fetch('https://nft.metawarrior.army/api/isunique', {
+            method: 'POST',
+            headers: {
+                'Content-type': 'application/json',
+            },
+            body: JSON.stringify({username: usernameLowered})
+            }).then((response) => {
+                return response.json();            
+            }).then((data) => {
+                if(data){
+                    if(data.status == 'error'){
+                        console.log("check isunique error");
+                        return false;
+                    }
+                    else{
+                        if(data.unique == true){
+                            buildButton.disabled = false;
+                            error_msg.innerText = 'Username available.';
+                        }
+                        else{
+                            buildButton.disabled = true;
+                            error_msg.innerText = 'Username is taken.';
+                            return false;
+                        }
+
+                    }
+                }
+                else{
+                }
+        });
+
+        console.log(usernameLowered);
+        
+        // Create the IPFS url
+        await fetch(ipfsApiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-type': 'application/json',
+            },
+            body: JSON.stringify({test: 'test', username: usernameLowered, address: address})
+            }).then((response) => {
+                return response.json();            
+            }).then((data) => {
+                console.log(data);
+                NFT = data.cid;
+            });
+        
+        // Set NFT CID in state
+        setNftReady(NFT);
+
+        const button = document.getElementById("buildNFT");
+        button.hidden = true;
+
+        // Execute transaction
+        write();
+        
+    }
 
     // This is a workaround for hydration errors 
     // caused by how we're displaying the 
@@ -223,95 +300,81 @@ function Index({ session, token }) {
         // the second time but not the first
         setHydrated(true);
 
-        // config for randomly generated avatars
-        window.jdenticon_config = {
-            hues: [119],
-            lightness: {
-                color: [0.47, 0.67],
-                grayscale: [0.28, 0.48]
-            },
-            saturation: {
-                color: 0.10,
-                grayscale: 0.02
-            },
-            backColor: "#0000"
-        };
+        
     }, []);
     if (!hydrated) {
         // Returns null on first render, so the client and server match
         return null;
     }
-    if(isSuccess){
-        console.log("SUCCESS");
-    }
-
-    const logout = async () => {
-        const logoutURL = "https://auth.metawarrior.army/oauth2/sessions/logout?client_id="+project.MWA_AUTH_CLIENTID+"&id_token_hint="+token.id_token+"&post_logout_redirect_uri="+encodeURIComponent("https://nft.metawarrior.army/logout");
-        console.log(logoutURL);
-        push(logoutURL);
-        
-    };
-
+    
     // Another UI Workaround
     // Not sure why I have to do this for the first time someone connects a wallet. 
     // The React UI works fine after that.
-    try{
-        const web3_success = document.getElementById('web3_success');
-        const mint_button = document.getElementById('buildNFT');
-        const username_prompt = document.getElementById('username_prompt');
-        if(data){
-            username_prompt.innerHTML = '<span>Congrats! You are now a member of MetaWarrior Army!</span><br><span class="small">Back to your <a href="https://www.metawarrior.army/profile" class="link-light">profile</a>.</span>'
-            web3_success.innerHTML = '<span>View <a href="'+project.BLOCKEXPLORER+data.hash+'" class="link-light" target="_blank">transaction</a>.</span>';
-            // Update user
-            var hash = data.hash;
-            fetch(storeTxUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-type': 'application/json',
-                },
-                body: JSON.stringify({address: address, tx_hash: hash })
+    const checkData = async() => {
+        try{
+            const web3_success = document.getElementById('web3_success');
+            const mint_button = document.getElementById('buildNFT');
+            const username_prompt = document.getElementById('username_prompt');
+            if(data){
+                username_prompt.innerHTML = '<span>Congrats! You are now a member of MetaWarrior Army!</span><br><span class="small">Back to your <a href="https://www.metawarrior.army/profile" class="link-light">profile</a>.</span>'
+                web3_success.innerHTML = '<span>View <a href="'+project.BLOCKEXPLORER+data.hash+'" class="link-light" target="_blank">transaction</a>.</span>';
+                // Update user
+                var hash = data.hash;
+                fetch(storeTxUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-type': 'application/json',
+                    },
+                    body: JSON.stringify({address: address, tx_hash: hash })
                 });
                 mint_button.hidden = true;
-            
-        } 
-    }
-    catch(error){}
+                
+            } 
+        }
+        catch(error){}
+    };
 
-    try{
-        if(isConnected){
-            // Need to validate isUser and txHash
-            // Check for current user
-            console.log("Checking for current user");
-            fetch(isUserUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-type': 'application/json',
-                },
-                body: JSON.stringify({address: address})
-                }).then((response) => {
-                    return response.json();            
-                }).then((data) => {
-                    if(data){
-                        if(data.status == 'unknownUser'){
-                            push('https://www.metawarrior.army/dev/signup.php');
-                            //signIn();
-                        }
-                        if(data.tx_hash != ''){
-                            setIsUser(data.username);
-                                setTxHash(data.tx_hash);
+    const checkConnection = async () => {
+        try{
+            if(isConnected){
+                // Need to validate isUser and txHash
+                // Check for current user
+                console.log("Checking for current user");
+                fetch(isUserUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-type': 'application/json',
+                    },
+                    body: JSON.stringify({address: address})
+                    }).then((response) => {
+                        return response.json();            
+                    }).then((data) => {
+                        if(data){
+                            if(data.status == 'unknownUser'){
+                                push('https://www.metawarrior.army/dev/signup.php');
+                                //signIn();
+                            }
+                            if(data.tx_hash != ''){
+                                setIsUser(data.username);
+                                    setTxHash(data.tx_hash);
+                            }
+                            else{
+                                setIsUser(data.username);
+                            }
                         }
                         else{
-                            setIsUser(data.username);
                         }
-                    }
-                    else{
-                    }
-            });
+                });
+            }
+            else{
+    
+            }
         }
-        else{
-        }
-    }
-    catch(error){}
+        catch(error){}
+    };
+
+    checkData();
+    checkConnection();
 
     // RETURN HTML PAGE
     return (
@@ -358,6 +421,7 @@ function Index({ session, token }) {
 
             <div id="form" hidden=
                 {
+                    !session ? true :
                     txHash ? true :
                     isUser ? false :
                     data ? true :
@@ -378,7 +442,7 @@ function Index({ session, token }) {
                             defaultValue={isUser ? isUser : ''}></input>
                     </div>
                     <br></br>
-                    
+                    <div>
                     <button id="zkevm" type="submit" 
                         onClick={() => addChain()} 
                         className="btn btn-outline-secondary btn-lg w-100" 
@@ -395,23 +459,15 @@ function Index({ session, token }) {
                             chain ?
                             (chain.id != project.BLOCKCHAIN_ID) ? true : false : false
                         }>Mint NFT</button>
-                    <button id="login" type="submit"
-                        onClick={() => signIn()}
-                        className="btn btn-outline-secondary btn-lg w-100"
-                        hidden={!session ? false : true}>Login
-                    </button>
-                    <button id="logout" type="submit"
-                        onClick={() => logout()}
-                        className="btn btn-outline-secondary btn-lg w-100"
-                        hidden={
-                            !session ? true: false
-                        }>Logout
-                    </button>
+                    
+                    
+                    </div>
                     <br></br>
                     <p className="small text-danger" id="error_msg"></p>
                     
                 </div>
             </div>
+            
 
             <div id="connector_group" hidden={ isConnected ? true : false }>
                 <h5>Connect your wallet.</h5>
@@ -433,6 +489,7 @@ function Index({ session, token }) {
                 ))}
             </div>
             
+            <div>
             <p className="small text-success" id="web3_success">
                 {
                     data ? (
@@ -442,11 +499,35 @@ function Index({ session, token }) {
                     ) : false
                 }    
             </p>
-            <p className="small text-danger" id="web3_error">{
+            </div>
+            <div>
+            <p className="small" id="disconnect" hidden={isConnected ? false : true}>
+                <a className="link-light" onClick={() => disconnectWallet()} href="#">Disconnect Wallet</a>
+            </p>
+            </div>
+            <div>
+            <p className="small text-danger" id="web3_error"
+                hidden={
+                    txHash ? true : false
+                }>{
                 (isPrepareError || isError) && (
                     <span>Error: {(prepareError || error)?.message}</span>
                 )
             }</p>
+            </div>
+
+            <button id="login" type="submit"
+                        onClick={() => signIn()}
+                        className="btn btn-outline-secondary btn-lg w-100"
+                        hidden={!session ? false : true}>Login
+                    </button>
+            <button id="logout" type="submit"
+                onClick={() => logout()}
+                className="btn btn-outline-secondary btn-lg w-100"
+                hidden={
+                    !session ? true: false
+                }>Logout
+            </button>
 
           </div>
         </div>
@@ -462,7 +543,7 @@ export const getServerSideProps = (async (context) => {
     const res = context.res;
     const session = await getServerSession(req,res,authOptions);
     const token = await getToken({req});
-    //console.log(token);
+    console.log(session);
 
     if(session && token){
         //console.log(token);

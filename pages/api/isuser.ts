@@ -43,6 +43,7 @@ export default async function handler(
         //console.log("ISUSER SEARCHING")
 
         if(address){
+          //console.log("Address: "+address);
           const search_query = "SELECT * FROM users WHERE address='"+address+"'";
           const search_result = await isuser_db_conn.query(search_query);
           
@@ -57,6 +58,7 @@ export default async function handler(
                         tx_hash: search_result.rows[0].nft_0_tx,
                         status: "Minted"
                       });
+                      return;
                     }
                     else{
                       res.status(200).json({ 
@@ -64,29 +66,38 @@ export default async function handler(
                         tx_hash: '',
                         status: "usernameSecured"
                       });
+                      return;
                     }
                     
                 }
                 else{
                     //console.log("NEW USER");
                     res.status(200).json({username: '',tx_hash: '', status: 'newUser'});
+                    return;
                 }
             }
             else{
                 // This shouldn't happen because we're supposed to authenticate users and record their address then during auth
                 //console.log("RESULTS ERROR");
                 res.status(200).json({ username: '', tx_hash: '', status: 'unknownUser'});
+                return;
             }
           }
         }
         else{
           res.status(500);
           console.log("no address");
+          return;
         }
     }
     catch(error){
         res.status(500);
         console.log(error);
+        return;
     }
+  }
+  else{
+    res.status(500);
+    return;
   }
 }

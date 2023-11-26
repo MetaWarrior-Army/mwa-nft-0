@@ -41,6 +41,9 @@ export default async function handler(
   }
   
   const { test, nonce, username, address } = req.body
+
+  const usernameLowered = String(username).toLowerCase();
+  console.log(usernameLowered);
   
   if(req.method == 'POST'){
     //console.log("test: "+test);
@@ -54,8 +57,7 @@ export default async function handler(
     // https://jdenticon.com/icon-designer.html?config=6b80330010770a022f431c30
     const jdenticon = require('jdenticon');
     const fs = require('fs');
-    jdenticon.configure(project.JDENTICON_CONFIG);
-    const avatar = jdenticon.toPng(address,80);
+    const avatar = jdenticon.toPng(address,100);
     const filename = process.env.NFT_AVATAR_PATH+address+process.env.NFT_IMAGE_FILEEXT;
     fs.writeFileSync(filename,avatar);
     
@@ -86,7 +88,7 @@ export default async function handler(
         ],
         "description": "MetaWarrior Army",
         "image": "ipfs://"+avatarCID?.toString(),
-        "username": username,
+        "username": usernameLowered,
         "address": address
       };
     }
@@ -129,7 +131,7 @@ export default async function handler(
           //console.log("FOUND USER");
           if(!search_result.rows[0].username){
             //console.log("UPDATING USER");
-            const update_query = "UPDATE users SET username = '"+username+"', nft_0_avatar_cid = '"+avatarCID?.toString()+"', nft_0_cid = '"+nftCID?.toString()+"' WHERE address='"+address+"'";
+            const update_query = "UPDATE users SET username = '"+usernameLowered+"', nft_0_avatar_cid = '"+avatarCID?.toString()+"', nft_0_cid = '"+nftCID?.toString()+"' WHERE address='"+address+"'";
             const update_result = await ipfs_db_conn.query(update_query);
             //console.log(update_result);
             if(update_result.rowCount == 1){
