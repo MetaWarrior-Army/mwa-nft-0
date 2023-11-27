@@ -1,16 +1,16 @@
 // NextJS Auth
 import NextAuth from "next-auth";
-// Moralis Auth Provider
-import { MoralisNextAuthProvider } from "@moralisweb3/next";
 
+console.log(process.env.OAUTH_CLIENTSECRET);
+// MWA Oauth
 const MWAProvider = {
   id: "MWA",
   name: "MetaWarrior Army",
   type: "oauth",
-  wellKnown: "https://auth.metawarrior.army/.well-known/openid-configuration",
-  authorization: { params: { scope: "openid profile", redirect_uri: "https://nft.metawarrior.army/api/auth/callback/MWA"} },
-  token: { url: "https://auth.metawarrior.army/oauth2/token" },
-  userinfo: {url: "https://auth.metawarrior.army/userinfo" },
+  wellKnown: process.env.OAUTH_WELLKNOWN,
+  authorization: { params: { scope: "openid profile", redirect_uri: process.env.OAUTH_REDIRECT_URI} },
+  token: { url: process.env.OAUTH_TOKEN_URI },
+  userinfo: {url: process.env.OAUTH_USERINFO },
   profile(profile) {
     return {
       id: JSON.parse(profile.user).id,
@@ -20,8 +20,8 @@ const MWAProvider = {
     }
   },
   checks: ["pkce", "state"],
-  clientId: "5e9abc24-501c-448a-92f5-d708406a0424",
-  clientSecret: "tcHRv0Pjeqxrf4b-_Jx0U8kpM_",
+  clientId: process.env.OAUTH_CLIENTID,
+  clientSecret: process.env.OAUTH_CLIENTSECRET,
 }
 
 export const authOptions = {

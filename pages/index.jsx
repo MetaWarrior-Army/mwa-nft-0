@@ -32,7 +32,6 @@ import { project } from '../src/config.jsx';
 import { blocked_users } from "../src/blocked_usernames.jsx";
 // Push
 import { push } from 'next/router';
-import { exit } from "process";
 // For cleaning username input
 const word_re = /^\w+$/;
 // IPFS API Endpoint
