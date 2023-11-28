@@ -12,10 +12,11 @@ const MWAProvider = {
   token: { url: process.env.OAUTH_TOKEN_URI },
   userinfo: {url: process.env.OAUTH_USERINFO },
   profile(profile) {
+    //console.log(profile);
     return {
-      id: JSON.parse(profile.user).id,
+      id: JSON.parse(profile.userObj).id,
       address: profile.address,
-      username: JSON.parse(profile.user).username,
+      username: profile.username,
       profile: profile,
     }
   },
@@ -28,6 +29,7 @@ export const authOptions = {
   providers: [MWAProvider],
   callbacks: {
     async jwt({ token, user, account }) {
+      console.log(user);
       if (user) {
         token.user = user;
       }
