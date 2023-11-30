@@ -17,6 +17,24 @@ type ResponseData = {
   success: boolean
 }
 
+async function checkTx (tx_hash: string) {
+  const tx_url = 'https://api-zkevm.polygonscan.com/api?module=transaction&action=gettxreceiptstatus&txhash='+tx_hash+'&apikey='+process.env.POLYGONSCAN_API_KEY+'';
+  var tx_res = await fetch(tx_url)
+    .then((res) => {
+      return res.json();
+    }).then((data) => {
+      if(data.status == '0'){
+        return "false";
+      }
+      else if(data.status == '1'){
+        return "true";
+      }
+      else{
+        return "pending";
+      }
+    });
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ResponseData>
@@ -36,19 +54,40 @@ export default async function handler(
 
   if(req.method == 'POST'){
     if(address && tx_hash){
-        //console.log("UPDATING USER");
-        const update_query = "UPDATE users SET nft_0_tx='"+tx_hash+"' WHERE address='"+address+"'";
-        const update_result = await storetx_db_conn.query(update_query);
-        if(update_result.rowCount != null){
-            if(update_result.rowCount > 0){
-                res.status(200).json({success: true});
-                return;
-            }
-            else{
-                res.status(500);
-                return;
-            }
-        }
+
+      // Okay, we have a tx hash
+      // We need to make sure it's successful before continuing.
+      // We also need to make sure it's a transaction against our contract!!
+      // we can check an api to find out if it was successful.
+      // In this example we're using Polygon zkEVM Testnet.
+      // So we'll try to use that.
+      var tx_status = await checkTx(tx_hash);
+      console.log(tx_status);
+      // If the Tx failed then die
+      if(String(tx_status) == "false"){
+        res.status(500);
+        return;
+      }
+      else if (String(tx_status) == "pending"){
+        // Not sure what to do here. The API is very limiting.
+      }
+      else{
+        console.log("SUCCESSFUL TX");
+      }
+
+      //console.log("UPDATING USER");
+      const update_query = "UPDATE users SET nft_0_tx='"+tx_hash+"' WHERE address='"+address+"'";
+      const update_result = await storetx_db_conn.query(update_query);
+      if(update_result.rowCount != null){
+          if(update_result.rowCount > 0){
+              res.status(200).json({success: true});
+              return;
+          }
+          else{
+              res.status(500);
+              return;
+          }
+      }
     }
     else{
         res.status(500);

@@ -29,7 +29,7 @@ export const authOptions = {
   providers: [MWAProvider],
   callbacks: {
     async jwt({ token, user, account }) {
-      console.log(user);
+      //console.log(user);
       if (user) {
         token.user = user;
       }

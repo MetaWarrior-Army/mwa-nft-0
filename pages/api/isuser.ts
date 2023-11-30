@@ -14,9 +14,9 @@ const isuser_db_conn = new Pool({
 });
 
 type ResponseData = {
-  username: string,
-  tx_hash: string,
-  status: string
+  username: string | undefined,
+  tx_hash: string | undefined,
+  status: string | undefined
 }
 
 export default async function handler(
@@ -29,7 +29,7 @@ export default async function handler(
     //console.log(session);
   }
   else{
-    console.log("No Session");
+    //console.log("No Session");
     res.status(500);
     return;
   }

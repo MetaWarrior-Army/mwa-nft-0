@@ -52,7 +52,7 @@ function Index({ session, token }) {
     const [ nftReady, setNftReady ] = useState(false);
     // Setup Web3 Connectors
     const { chain } = useNetwork();
-    const { connectAsync, connectors, isLoading, pendingConnector } = useConnect({
+    const { connectAsync, connectors, pendingConnector } = useConnect({
         onError(error){
             const web3_error = document.getElementById('web3_error');
             web3_error.innerText = error.message;
@@ -66,7 +66,7 @@ function Index({ session, token }) {
             jdenticon.update('#avatar',data.account);
 
             // Check for current user
-            console.log("Checking for current user");
+            //console.log("Checking for current user");
             fetch(isUserUrl, {
                 method: 'POST',
                 headers: {
@@ -115,11 +115,11 @@ function Index({ session, token }) {
         functionName: 'mintNFT',
         args: [ address, nftReady ],
     });
-    const { data, error, isError, write } = useContractWrite(config);
+    const { data, error, write } = useContractWrite(config);
     const { isSuccess } = useWaitForTransaction({
         hash: data?.hash,
     });
-    const { data: walletClient } = useWalletClient();
+    const { data: walletClient, isError, isLoading } = useWalletClient();
 
     // SCREEN USERNAMES
     // Later we need to check a DB of usernames
@@ -128,7 +128,7 @@ function Index({ session, token }) {
         const button = document.getElementById('buildNFT');
 
         if(blocked_users.includes(event.target.value)){
-            console.log("Blocked Username");
+            //console.log("Blocked Username");
             // Blocked username
             error_msg.innerText = "Username is taken.";
             button.disabled = true;
@@ -202,7 +202,7 @@ function Index({ session, token }) {
 
     const logout = async () => {
         const logoutURL = "https://auth.metawarrior.army/oauth2/sessions/logout?client_id="+project.MWA_AUTH_CLIENTID+"&id_token_hint="+token.id_token+"&post_logout_redirect_uri="+encodeURIComponent("https://nft.metawarrior.army/logout");
-        console.log(logoutURL);
+        //console.log(logoutURL);
         push(logoutURL);
         
     };
@@ -222,6 +222,8 @@ function Index({ session, token }) {
         const usernameLowered = String(username.value).toLowerCase();
         const error_msg = document.getElementById('error_msg');
         const buildButton = document.getElementById('buildNFT');
+        const pending = document.getElementById('pending');
+        pending.hidden = false;
 
         // Make sure we have something
         if(username.value.length < 1){
@@ -242,17 +244,19 @@ function Index({ session, token }) {
             }).then((data) => {
                 if(data){
                     if(data.status == 'error'){
-                        console.log("check isunique error");
+                        //console.log("check isunique error");
+                        pending.hidden = true;
                         return false;
                     }
                     else{
                         if(data.unique == true){
                             buildButton.disabled = false;
-                            error_msg.innerText = 'Username available.';
+                            //error_msg.innerText = 'Username available.';
                         }
                         else{
                             buildButton.disabled = true;
                             error_msg.innerText = 'Username is taken.';
+                            pending.hidden = true;
                             return false;
                         }
 
@@ -262,7 +266,7 @@ function Index({ session, token }) {
                 }
         });
 
-        console.log(usernameLowered);
+        //log(usernameLowered);
         
         // Create the IPFS url
         await fetch(ipfsApiUrl, {
@@ -274,7 +278,7 @@ function Index({ session, token }) {
             }).then((response) => {
                 return response.json();            
             }).then((data) => {
-                console.log(data);
+                //console.log(data);
                 NFT = data.cid;
             });
         
@@ -285,7 +289,8 @@ function Index({ session, token }) {
         button.hidden = true;
 
         // Execute transaction
-        write();
+        await write();
+        pending.hidden = true;
         
     }
 
@@ -314,19 +319,32 @@ function Index({ session, token }) {
             const web3_success = document.getElementById('web3_success');
             const mint_button = document.getElementById('buildNFT');
             const username_prompt = document.getElementById('username_prompt');
+            const pending = document.getElementById('pending');
             if(data){
-                username_prompt.innerHTML = '<span>Congrats! You are now a member of MetaWarrior Army!</span><br><span class="small">Back to your <a href="https://www.metawarrior.army/profile" class="link-light">profile</a>.</span>'
-                web3_success.innerHTML = '<span>View <a href="'+project.BLOCKEXPLORER+data.hash+'" class="link-light" target="_blank">transaction</a>.</span>';
-                // Update user
-                var hash = data.hash;
-                fetch(storeTxUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-type': 'application/json',
-                    },
-                    body: JSON.stringify({address: address, tx_hash: hash })
-                });
-                mint_button.hidden = true;
+                if(isError){
+                    // safely quit here
+                    pending.hidden = true;
+                    return;
+                }
+                else if (isLoading){
+                    pending.hidden = false;
+                }
+                else{
+                    pending.hidden = true;
+                    username_prompt.innerHTML = '<span>Congrats! You are now a member of MetaWarrior Army!</span><br><span class="small">Back to your <a href="https://www.metawarrior.army/profile" class="link-light">profile</a>.</span>'
+                    web3_success.innerHTML = '<span>View <a href="'+project.BLOCKEXPLORER+data.hash+'" class="link-light" target="_blank">transaction</a>.</span>';
+                    // Update user
+                    var hash = data.hash;
+                    fetch(storeTxUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-type': 'application/json',
+                        },
+                        body: JSON.stringify({address: address, tx_hash: hash })
+                    });
+                    mint_button.hidden = true;
+                }
+                
                 
             } 
         }
@@ -338,7 +356,7 @@ function Index({ session, token }) {
             if(isConnected){
                 // Need to validate isUser and txHash
                 // Check for current user
-                console.log("Checking for current user");
+                //console.log("Checking for current user");
                 fetch(isUserUrl, {
                     method: 'POST',
                     headers: {
@@ -373,7 +391,7 @@ function Index({ session, token }) {
     };
 
     checkData();
-    checkConnection();
+    checkConnection();   
 
     // RETURN HTML PAGE
     return (
@@ -417,7 +435,9 @@ function Index({ session, token }) {
 
             <hr/>
             <br></br>
-
+            <div className="spinner-border text-light" id="pending" hidden>
+                <span className="sr-only">Loading...</span>
+            </div>
             <div id="form" hidden=
                 {
                     !session ? true :
@@ -487,8 +507,21 @@ function Index({ session, token }) {
                     </div>
                 ))}
             </div>
+
+            <button id="login" type="submit"
+                        onClick={() => signIn()}
+                        className="btn btn-outline-secondary btn-lg w-100"
+                        hidden={!session ? false : true}>Login
+                    </button>
+            <button id="logout" type="submit"
+                onClick={() => logout()}
+                className="btn btn-outline-secondary btn-lg w-100"
+                hidden={
+                    !session ? true: false
+                }>Logout
+            </button>
             
-            <div>
+            <div className="mt-5">
             <p className="small text-success" id="web3_success">
                 {
                     data ? (
@@ -515,18 +548,7 @@ function Index({ session, token }) {
             }</p>
             </div>
 
-            <button id="login" type="submit"
-                        onClick={() => signIn()}
-                        className="btn btn-outline-secondary btn-lg w-100"
-                        hidden={!session ? false : true}>Login
-                    </button>
-            <button id="logout" type="submit"
-                onClick={() => logout()}
-                className="btn btn-outline-secondary btn-lg w-100"
-                hidden={
-                    !session ? true: false
-                }>Logout
-            </button>
+            
 
           </div>
         </div>
@@ -542,7 +564,7 @@ export const getServerSideProps = (async (context) => {
     const res = context.res;
     const session = await getServerSession(req,res,authOptions);
     const token = await getToken({req});
-    console.log(session);
+    //console.log(session);
 
     if(session && token){
         //console.log(token);
