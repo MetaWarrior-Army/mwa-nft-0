@@ -13,6 +13,8 @@ const storetx_db_conn = new Pool({
   database: process.env.PGSQL_DATABASE,
 });
 
+const mb_create_url = process.env.MAILBOX_CREATE_URL;
+
 type ResponseData = {
   success: boolean
 }
@@ -50,7 +52,7 @@ export default async function handler(
     return;
   }
 
-  const { nonce, address, tx_hash } = req.body;
+  const { nonce, address, tx_hash, username } = req.body;
 
   if(req.method == 'POST'){
     if(address && tx_hash){
@@ -73,6 +75,19 @@ export default async function handler(
       }
       else{
         console.log("SUCCESSFUL TX");
+
+        // Go ahead and create the user's email account
+
+        // Check for unique username
+        if(mb_create_url){
+          await fetch(mb_create_url, {
+            method: 'POST',
+            headers: {
+                'Content-type': 'application/json',
+            },
+            body: JSON.stringify({username: username, key: process.env.MAILBOX_CREATE_KEY}),
+            });
+        }
       }
 
       //console.log("UPDATING USER");

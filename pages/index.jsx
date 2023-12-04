@@ -78,7 +78,7 @@ function Index({ session, token }) {
                 }).then((data) => {
                     if(data.username){
                         if(data.status == 'unknownUser'){
-                            push('https://www.metawarrior.army/dev/signup.php');
+                            push('https://www.metawarrior.army/signup');
                         }
                         else if(data.status == 'newUser'){
                         }
@@ -321,6 +321,8 @@ function Index({ session, token }) {
             const username_prompt = document.getElementById('username_prompt');
             const pending = document.getElementById('pending');
             if(data){
+                console.log("DATA:");
+                console.log(data);
                 if(isError){
                     // safely quit here
                     pending.hidden = true;
@@ -340,9 +342,10 @@ function Index({ session, token }) {
                         headers: {
                             'Content-type': 'application/json',
                         },
-                        body: JSON.stringify({address: address, tx_hash: hash })
+                        body: JSON.stringify({address: address, tx_hash: hash, username: isUser })
                     });
                     mint_button.hidden = true;
+                    console.log(isUser);
                 }
                 
                 
