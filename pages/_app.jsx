@@ -25,7 +25,7 @@ import { project } from '../src/config.jsx';
 
 // Configure chains
 const { chains, publicClient, webSocketPublicClient } = configureChains(
-    [polygon],
+    [polygon, polygonZkEvmTestnet],
     [infuraProvider({ apiKey: project.INFURA_API_KEY }),publicProvider()]
   );
   
