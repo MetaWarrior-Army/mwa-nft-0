@@ -6,7 +6,7 @@ async function main() {
   
     // Start deployment, returning a promise that resolves to a contract object
   
-    const mwaNFT = await MWANFT.deploy('0x9821e26d71C4d0CAC99D280DF6dc712762312ddA');
+    const mwaNFT = await MWANFT.deploy('0x00Ddc75A53A7b4747df232EfBad8ff7e32c2c38d');
   
     await mwaNFT.waitForDeployment();
   
@@ -26,3 +26,5 @@ async function main() {
       process.exit(1)
   
     });
+
+    

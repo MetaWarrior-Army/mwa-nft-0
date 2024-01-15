@@ -1,14 +1,21 @@
 // NextJS API Helpers
 import type { NextApiRequest, NextApiResponse } from 'next'
 // KUBO (IPFS) RPC CLIENT
-import { create, globSource } from 'kubo-rpc-client'
+// import { create, globSource } from 'kubo-rpc-client'
 // PROJECT CONFIG
-import { project } from '../../src/config.jsx';
+//import { project } from '../../src/config.jsx';
 // DB Connection
 import { Pool } from "pg";
 //Next Auth Server Session
 import { getServerSession, NextAuthOptions } from "next-auth";
 import { authOptions } from "./auth/[...nextauth]";
+
+// Web3 Storage
+import { create } from '@web3-storage/w3up-client';
+import { filesFromPaths } from 'files-from-path';
+const client = await create();
+await client.login('admin@metawarrior.army');
+await client.setCurrentSpace('did:key:z6MkryKW8fcfGm8hYqKsLVi456VKWLhcLuKfNe91XMunfKvF');
 
 const ipfs_db_conn = new Pool({
   user: process.env.PGSQL_USER,
@@ -22,7 +29,7 @@ type ResponseData = {
   cid: string
 }
 
-const client = create({url: process.env.IPFS_RPC_URI})
+//const client = create({url: process.env.IPFS_RPC_URI})
 
 export default async function handler(
   req: NextApiRequest,
@@ -46,6 +53,7 @@ export default async function handler(
   console.log(usernameLowered);
   
   if(req.method == 'POST'){
+    // Some stats about the NFT we're creating
     //console.log("test: "+test);
     //console.log("nonce: "+nonce);
     //console.log("username: "+username);
@@ -68,28 +76,28 @@ export default async function handler(
     var avatarCID;
     
     try{
-      const avatar_cid = client.addAll(globSource(String(process.env.NFT_AVATAR_PATH),address+'*'));
-      var result_count = 0;
-      for await (let result of avatar_cid) {
-        if(result_count == 0){
-          avatarCID = result.cid;
-          //console.log('avatar cid: '+String(avatarCID.toString()));
-        }
-      }
+      //const avatar_cid = client.addAll(globSource(String(process.env.NFT_AVATAR_PATH),address+'*'));
+      const avatarPath = process.env.NFT_AVATAR_PATH+address+'.png';
+      console.log(avatarPath);
+      const avatar_files = await filesFromPaths([avatarPath]);
+      const avatar_cid = await client.uploadFile(avatar_files[0]);
+      avatarCID = avatar_cid;
+      console.log(avatarCID);
 
       // build JSON
       nftJSON = {
         "attributes": [
           {
-            "Season": "Development",
-            "Publisher": "https://www.metawarrior.army",
-            "Quote":"Everything you want to do is on the other side of something you've never done."
+            "season": "Development",
+            "publisher": "https://www.metawarrior.army",
+            "quote":"Everything you want to do is on the other side of something you've never done.",
+            "username": usernameLowered,
+            "address": address
           },
         ],
+        "name": "MetaWarrior Army Founder",
         "description": "MetaWarrior Army",
         "image": "ipfs://"+avatarCID?.toString(),
-        "username": usernameLowered,
-        "address": address
       };
     }
     catch(error){
@@ -100,18 +108,15 @@ export default async function handler(
 
     const nftJSONString = JSON.stringify(nftJSON);
     const nftPath = process.env.NFT_JSON_PATH+address+'.json';
+    console.log(nftPath);
 
     try{
         fs.writeFileSync(nftPath,nftJSONString);
-        const nft_cid = client.addAll(globSource(String(process.env.NFT_JSON_PATH), address+'*'));
-        var result_count = 0;
-        for await (let result of nft_cid) {
-          if(result_count == 0){
-            nftCID = result.cid;
-            //console.log('nft cid: '+String(nftCID.toString()));
-          }
-        }
-               
+        //const nft_cid = client.addAll(globSource(String(process.env.NFT_JSON_PATH), address+'*'));
+        const nft_files = await filesFromPaths(nftPath);
+        const nft_cid = await client.uploadFile(nft_files[0]);
+        nftCID = nft_cid;
+        console.log(nftCID);
     }
     catch(error){
         console.log(error);
@@ -162,8 +167,5 @@ export default async function handler(
       res.status(500);
     }
     
-  }  
-  
-
-
+  }    
 }

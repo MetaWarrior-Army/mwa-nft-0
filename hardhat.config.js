@@ -23,7 +23,7 @@ module.exports = {
 
         url: "https://rpc.public.zkevm-test.net",
         chainId: 1442,
-        from: "0x9821e26d71C4d0CAC99D280DF6dc712762312ddA",
+        from: "0x00Ddc75A53A7b4747df232EfBad8ff7e32c2c38d",
 
         accounts: [`${process.env.ALCHEMY_PRIVATE_KEY}`]
 

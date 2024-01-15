@@ -1,14 +1,18 @@
-//Contract based on [https://docs.openzeppelin.com/contracts/3.x/erc721](https://docs.openzeppelin.com/contracts/3.x/erc721)
+// MWA Founder NFT
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
 contract MWANFT is ERC721URIStorage, Ownable {
+    // Price: 0.02 ETH
+    // Supply: 100
     uint256 private _tokenIds;
-
+    uint public constant mintPrice = (0.02 ether);
+    uint public constant supply = 100;
+    
     constructor(address initialOwner) Ownable(initialOwner) ERC721("MWANFT", "MWA") { }
 
     // Change contract owner
@@ -21,15 +25,58 @@ contract MWANFT is ERC721URIStorage, Ownable {
         return true;
     }
 
+    // Mint NFT
     function mintNFT(address recipient, string memory tokenURI)
-        public
+        public 
+        payable
         returns (uint256)
     {
+        require(msg.value == mintPrice, "Provide more ETH");
         uint256 tokenId = _tokenIds;
+        require(tokenId < supply, "No more NFTs");
         _mint(recipient, tokenId);
         _setTokenURI(tokenId, tokenURI);
         _tokenIds += 1;
 
         return tokenId;
+    }
+
+    // Get contract Balance
+    function getCBalance()
+        public
+        view 
+        onlyOwner()
+        returns (uint256)
+    {
+        return address(this).balance;
+    }
+
+    // Withdraw Eth from contract
+    function withdraw()
+        public 
+        payable
+        onlyOwner()
+        returns (bool)
+    {
+        require(msg.sender == owner(), "Unauthorized");
+        (bool success, ) = owner().call{value:address(this).balance}("");
+        require(success, "Withdraw failed.");
+        return true;
+    }
+
+    // Soulbound NFT Features
+    function burn(uint256 tokenId) external {
+        require(ownerOf(tokenId) == msg.sender, "Only the owner of the token can burn it.");
+        _burn(tokenId);
+    }
+
+    function transferFrom(address from, address to, uint256 tokenId) public virtual override(ERC721,IERC721) {
+        require(from == address(0),"This is a non-transferable Soulbound NFT.");
+        super.transferFrom(from, to, tokenId);
+    }
+
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) public virtual override(ERC721,IERC721) {
+        require(from == address(0),"This is a non-transferable Soulbound NFT.");
+        super.safeTransferFrom(from, to, tokenId, data);
     }
 }
