@@ -1,4 +1,9 @@
-// MWA Founder NFT
+// MWA Founder NFT //
+/////////////////////
+// A Soulbound NFT the owner can burn.
+// Anyone can mint.
+// Price is 0.02 ETH
+// Max supply is 100.
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
@@ -7,8 +12,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
 contract MWANFT is ERC721URIStorage, Ownable {
-    // Price: 0.02 ETH
-    // Supply: 100
     uint256 private _tokenIds;
     uint public constant mintPrice = (0.02 ether);
     uint public constant supply = 100;
