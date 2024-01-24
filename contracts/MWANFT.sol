@@ -31,10 +31,10 @@ contract MWANFT is ERC721URIStorage, Ownable {
     // Mint NFT
     function mintNFT(address recipient, string memory tokenURI)
         public 
-        payable
+        //payable
         returns (uint256)
     {
-        require(msg.value == mintPrice, "Provide more ETH");
+        //require(msg.value == mintPrice, "Provide more ETH");
         uint256 tokenId = _tokenIds;
         require(tokenId < supply, "No more NFTs");
         _mint(recipient, tokenId);
