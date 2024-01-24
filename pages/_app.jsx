@@ -13,6 +13,8 @@ import { infuraProvider } from 'wagmi/providers/infura';
 
 // chains
 import { polygon, polygonZkEvmTestnet } from "wagmi/chains";
+import { op_sepolia } from '../src/op_sepolia.ts';
+
 
 // Next Auth Session Control
 import { SessionProvider } from "next-auth/react";
@@ -25,7 +27,7 @@ import { project } from '../src/config.jsx';
 
 // Configure chains
 const { chains, publicClient, webSocketPublicClient } = configureChains(
-    [polygon, polygonZkEvmTestnet],
+    [polygon, polygonZkEvmTestnet, op_sepolia],
     [infuraProvider({ apiKey: project.INFURA_API_KEY }),publicProvider()]
   );
   

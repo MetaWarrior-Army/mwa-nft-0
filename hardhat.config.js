@@ -23,10 +23,16 @@ module.exports = {
 
         url: "https://rpc.public.zkevm-test.net",
         chainId: 1442,
-        from: "0x00Ddc75A53A7b4747df232EfBad8ff7e32c2c38d",
+        from: `${process.env.WALLET_PUBLIC_KEY}`,
+        accounts: [`${process.env.WALLET_PRIVATE_KEY}`]
 
-        accounts: [`${process.env.ALCHEMY_PRIVATE_KEY}`]
+     },
 
+     op_sepolia: {
+         url: "https://sepolia.optimism.io",
+         chainId: 11155420,
+         from: `${process.env.WALLET_PUBLIC_KEY}`,
+         accounts: [`${process.env.WALLET_PRIVATE_KEY}`]
      }
 
   },

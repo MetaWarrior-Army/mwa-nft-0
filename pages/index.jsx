@@ -17,6 +17,9 @@ import { useAccount,
     useWalletClient } from "wagmi";
 // chains
 import { polygon, polygonZkEvmTestnet } from "wagmi/chains";
+
+import { op_sepolia } from '../src/op_sepolia.ts';
+
 // NextJS helpers
 import { useEffect, useState, useRef } from 'react';
 import Head  from "next/head";
@@ -419,7 +422,7 @@ function Index({ session, token }) {
                         hidden={
                             chain ? 
                             (chain.id != project.BLOCKCHAIN_ID) ? false : true : true
-                        }>Connect to zkEVM</button>
+                        }>Connect to zkEvm</button>
                     <button id="buildNFT" type="submit" 
                         onClick={build_nft} 
                         className="btn btn-outline-secondary btn-lg w-100" 

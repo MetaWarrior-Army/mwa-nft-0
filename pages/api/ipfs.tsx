@@ -10,12 +10,11 @@ import { Pool } from "pg";
 import { getServerSession, NextAuthOptions } from "next-auth";
 import { authOptions } from "./auth/[...nextauth]";
 
-// Web3 Storage
-import { create } from '@web3-storage/w3up-client';
+// for reading files into blob streams for web3Client upload.
+// @ts-ignore 
 import { filesFromPaths } from 'files-from-path';
-const client = await create();
-await client.login('admin@metawarrior.army');
-await client.setCurrentSpace('did:key:z6MkryKW8fcfGm8hYqKsLVi456VKWLhcLuKfNe91XMunfKvF');
+
+import {client} from '../../src/web3storage.jsx';
 
 const ipfs_db_conn = new Pool({
   user: process.env.PGSQL_USER,

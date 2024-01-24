@@ -19,6 +19,8 @@ type ResponseData = {
   success: boolean
 }
 
+
+// FIX THIS FOR OPTIMISM
 async function checkTx (tx_hash: string) {
   const tx_url = 'https://api-zkevm.polygonscan.com/api?module=transaction&action=gettxreceiptstatus&txhash='+tx_hash+'&apikey='+process.env.POLYGONSCAN_API_KEY+'';
   var tx_res = await fetch(tx_url)
@@ -63,7 +65,7 @@ export default async function handler(
       // we can check an api to find out if it was successful.
       // In this example we're using Polygon zkEVM Testnet.
       // So we'll try to use that.
-      var tx_status = await checkTx(tx_hash);
+      const tx_status = await checkTx(tx_hash);
       console.log(tx_status);
       // If the Tx failed then die
       if(String(tx_status) == "false"){

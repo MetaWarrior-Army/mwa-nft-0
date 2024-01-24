@@ -18,6 +18,7 @@ import { useAccount,
     useWriteContract } from "wagmi";
 // chains
 import { polygon, polygonZkEvmTestnet } from "wagmi/chains";
+import { op_sepolia } from '../src/op_sepolia.ts';
 import { parseEther, parseGwei } from 'viem';
 // NextJS helpers
 import { useEffect, useState, useRef } from 'react';
@@ -109,7 +110,9 @@ function Index({ session, token, tokenURI }) {
     console.log(address);
     console.log(tokenURI);
 
-    // NFT MINTING CONFIGURATION
+    ///////////////////////////////
+    // NFT MINTING CONFIGURATION //
+    ///////////////////////////////
     const nftContractAbi = {
         name: 'mintNFT',
         type: 'function',
@@ -123,17 +126,19 @@ function Index({ session, token, tokenURI }) {
         abi: [nftContractAbi],
         functionName: 'mintNFT',
         args: [address,tokenURI],
-        value: parseEther("0.02"),
+        //value: parseEther("0.020"),
     });
     const { data, error, write } = useContractWrite(config);
     const { data: walletClient, isError, isLoading } = useWalletClient();
     const { isSuccess } = useWaitForTransaction({
         hash: data?.hash,
     });
-
     const mint_nft = async () => {
         write();
     }
+    /////////////////////////////////
+    /////////////////////////////////
+    /////////////////////////////////
 
     // CONNECT WEB3 WALLET
     const connectWallet = async ({connector}) => {
@@ -160,7 +165,7 @@ function Index({ session, token, tokenURI }) {
 
        // Function for adding the chain to the user's wallet if they don't have it
     const addChain = async () => {
-        await walletClient.addChain({ chain: polygonZkEvmTestnet });
+        await walletClient.addChain({ chain: op_sepolia });
         switchNetwork(project.BLOCKCHAIN_ID);
     }
 
