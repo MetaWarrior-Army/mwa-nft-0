@@ -12,7 +12,7 @@ import { publicProvider } from "wagmi/providers/public";
 import { infuraProvider } from 'wagmi/providers/infura';
 
 // chains
-import { polygon, polygonZkEvmTestnet } from "wagmi/chains";
+import { polygon, polygonZkEvmTestnet, sepolia, optimismSepolia } from "wagmi/chains";
 import { op_sepolia } from '../src/op_sepolia.ts';
 
 
@@ -27,7 +27,7 @@ import { project } from '../src/config.jsx';
 
 // Configure chains
 const { chains, publicClient, webSocketPublicClient } = configureChains(
-    [polygon, polygonZkEvmTestnet, op_sepolia],
+    [polygon, polygonZkEvmTestnet, sepolia, op_sepolia],
     [infuraProvider({ apiKey: project.INFURA_API_KEY }),publicProvider()]
   );
   

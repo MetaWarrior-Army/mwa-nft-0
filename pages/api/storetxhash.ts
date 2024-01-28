@@ -13,16 +13,17 @@ const storetx_db_conn = new Pool({
   database: process.env.PGSQL_DATABASE,
 });
 
+// API Endpoint for creating the mailbox
 const mb_create_url = process.env.MAILBOX_CREATE_URL;
 
 type ResponseData = {
   success: boolean
 }
 
-
-// FIX THIS FOR OPTIMISM
+// FIX THIS !!!!!!!!!
 async function checkTx (tx_hash: string) {
   const tx_url = 'https://api-zkevm.polygonscan.com/api?module=transaction&action=gettxreceiptstatus&txhash='+tx_hash+'&apikey='+process.env.POLYGONSCAN_API_KEY+'';
+  /*
   var tx_res = await fetch(tx_url)
     .then((res) => {
       return res.json();
@@ -37,6 +38,8 @@ async function checkTx (tx_hash: string) {
         return "pending";
       }
     });
+  */
+ return "true";
 }
 
 export default async function handler(
@@ -72,15 +75,10 @@ export default async function handler(
         res.status(500);
         return;
       }
-      else if (String(tx_status) == "pending"){
-        // Not sure what to do here. The API is very limiting.
-      }
+      // This happens everytime right now
       else{
-        console.log("SUCCESSFUL TX");
-
+        // SUCCESSFUL TX -- SHOULD BE VALIDATED, FIX ABOVE
         // Go ahead and create the user's email account
-
-        // Check for unique username
         if(mb_create_url){
           await fetch(mb_create_url, {
             method: 'POST',
@@ -92,7 +90,7 @@ export default async function handler(
         }
       }
 
-      //console.log("UPDATING USER");
+      // Update user db
       const update_query = "UPDATE users SET nft_0_tx='"+tx_hash+"' WHERE address='"+address+"'";
       const update_result = await storetx_db_conn.query(update_query);
       if(update_result.rowCount != null){

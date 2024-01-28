@@ -17,7 +17,7 @@ import { useAccount,
     useWalletClient,
     useWriteContract } from "wagmi";
 // chains
-import { polygon, polygonZkEvmTestnet } from "wagmi/chains";
+import { polygon, polygonZkEvmTestnet, sepolia, optimismSepolia } from "wagmi/chains";
 import { op_sepolia } from '../src/op_sepolia.ts';
 import { parseEther, parseGwei } from 'viem';
 // NextJS helpers
@@ -107,8 +107,8 @@ function Index({ session, token, tokenURI }) {
     const { isConnected, address } = useAccount();
     // Setup smart contract TX
     const { switchNetwork } = useSwitchNetwork();
-    console.log(address);
-    console.log(tokenURI);
+    //console.log(address);
+    //console.log(tokenURI);
 
     ///////////////////////////////
     // NFT MINTING CONFIGURATION //
@@ -126,13 +126,31 @@ function Index({ session, token, tokenURI }) {
         abi: [nftContractAbi],
         functionName: 'mintNFT',
         args: [address,tokenURI],
-        //value: parseEther("0.020"),
+        value: parseEther("0.020"),
     });
     const { data, error, write } = useContractWrite(config);
-    const { data: walletClient, isError, isLoading } = useWalletClient();
-    const { isSuccess } = useWaitForTransaction({
+    const { data: walletClient, isError } = useWalletClient();
+    const { isSuccess, isLoading } = useWaitForTransaction({
         hash: data?.hash,
     });
+
+
+    if (isSuccess ) {
+        console.log("TX SUCCESSFUL");
+
+        if(data){
+            // Update user
+            var hash = data.hash;
+            fetch(storeTxUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-type': 'application/json',
+                },
+                body: JSON.stringify({address: address, tx_hash: hash, username: isUser })
+            });
+        }
+
+    }
     const mint_nft = async () => {
         write();
     }
@@ -156,16 +174,9 @@ function Index({ session, token, tokenURI }) {
         return true;
     }
 
-    const logout = async () => {
-        const logoutURL = "https://auth.metawarrior.army/oauth2/sessions/logout?client_id="+project.MWA_AUTH_CLIENTID+"&id_token_hint="+token.id_token+"&post_logout_redirect_uri="+encodeURIComponent("https://nft.metawarrior.army/logout");
-        //console.log(logoutURL);
-        push(logoutURL);
-        
-    };
-
-       // Function for adding the chain to the user's wallet if they don't have it
+    // Function for adding the chain to the user's wallet if they don't have it
     const addChain = async () => {
-        await walletClient.addChain({ chain: op_sepolia });
+        await walletClient.addChain({ chain: sepolia });
         switchNetwork(project.BLOCKCHAIN_ID);
     }
 
@@ -196,8 +207,8 @@ function Index({ session, token, tokenURI }) {
             const username_prompt = document.getElementById('username_prompt');
             const pending = document.getElementById('pending');
             if(data){
-                console.log("DATA:");
-                console.log(data);
+                //console.log("DATA:");
+                //console.log(data);
                 if(isError){
                     // safely quit here
                     pending.hidden = true;
@@ -210,17 +221,9 @@ function Index({ session, token, tokenURI }) {
                     pending.hidden = true;
                     username_prompt.innerHTML = '<span>Congrats! You are now a member of MetaWarrior Army!</span><br><span class="small">Back to your <a href="https://www.metawarrior.army/profile" class="link-light">profile</a>.</span>'
                     web3_success.innerHTML = '<span>View <a href="'+project.BLOCKEXPLORER+data.hash+'" class="link-light" target="_blank">transaction</a>.</span>';
-                    // Update user
-                    var hash = data.hash;
-                    fetch(storeTxUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-type': 'application/json',
-                        },
-                        body: JSON.stringify({address: address, tx_hash: hash, username: isUser })
-                    });
+                    
                     mint_button.hidden = true;
-                    console.log(isUser);
+                    //console.log(isUser);
                 }
                 
                 
@@ -291,11 +294,9 @@ function Index({ session, token, tokenURI }) {
             
             <div id="username_prompt">
                 {
-                    txHash ? (
+                    (isSuccess||txHash) ? (
                         <>
                         <span>Congrats! You are now a member of MetaWarrior Army!</span>
-                        <br></br>
-                        <span className="small">You can view your mint transaction <a href={("https://testnet-zkevm.polygonscan.com/tx/"+txHash)} className="link-light" target="_blank">here</a>.</span>
                         <br></br>
                         <span className="small">You can view your NFT at your <a href="https://www.metawarrior.army/profile" className="link-light">profile</a>.</span>
                         </>
@@ -313,12 +314,15 @@ function Index({ session, token, tokenURI }) {
 
             <hr/>
             <br></br>
-            <div className="spinner-border text-light" id="pending" hidden>
-                <span className="sr-only">Loading...</span>
+            <div id="spinner" className="spinner-border text-secondary" role="status"
+                hidden={isLoading ? false : true}
+            >
+                <span className="sr-only"></span>
             </div>
             <div id="form" hidden=
                 {
                     !session ? true :
+                    isSuccess ? true :
                     txHash ? true :
                     isUser ? false :
                     data ? true :
@@ -345,7 +349,7 @@ function Index({ session, token, tokenURI }) {
                         hidden={
                             chain ? 
                             (chain.id != project.BLOCKCHAIN_ID) ? false : true : true
-                        }>Connect to zkEVM</button>
+                        }>Connect to Sepolia</button>
                     <button id="buildNFT" type="submit" 
                         onClick={mint_nft} 
                         className="btn btn-outline-secondary btn-lg w-100" 
@@ -385,18 +389,7 @@ function Index({ session, token, tokenURI }) {
                 ))}
             </div>
 
-            <button id="login" type="submit"
-                        onClick={() => signIn()}
-                        className="btn btn-outline-secondary btn-lg w-100"
-                        hidden={!session ? false : true}>Login
-                    </button>
-            <button id="logout" type="submit"
-                onClick={() => logout()}
-                className="btn btn-outline-secondary btn-lg w-100"
-                hidden={
-                    !session ? true: false
-                }>Logout
-            </button>
+            
             
             <div className="mt-5">
             <p className="small text-success" id="web3_success">
@@ -417,7 +410,8 @@ function Index({ session, token, tokenURI }) {
             <div>
             <p className="small text-danger" id="web3_error"
                 hidden={
-                    txHash ? true : false
+                    isSuccess ? true :
+                    txHash ? true : false 
                 }>{
                 (isPrepareError || isError) && (
                     <span>Error: {(prepareError || error)?.message}</span>

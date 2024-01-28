@@ -16,7 +16,7 @@ import { useAccount,
     useSwitchNetwork,
     useWalletClient } from "wagmi";
 // chains
-import { polygon, polygonZkEvmTestnet } from "wagmi/chains";
+import { polygon, polygonZkEvmTestnet, sepolia, optimismSepolia } from "wagmi/chains";
 
 import { op_sepolia } from '../src/op_sepolia.ts';
 
@@ -156,7 +156,7 @@ function Index({ session, token }) {
                 }).then((data) => {
                     if(data){
                         if(data.status == 'error'){
-                            console.log("check isunique error");
+                            //console.log("check isunique error");
                         }
                         else{
                             if(data.unique == true){
@@ -194,7 +194,7 @@ function Index({ session, token }) {
     }
 
     const logout = async () => {
-        const logoutURL = "https://auth.metawarrior.army/oauth2/sessions/logout?client_id="+project.MWA_AUTH_CLIENTID+"&id_token_hint="+token.id_token+"&post_logout_redirect_uri="+encodeURIComponent("https://nft.metawarrior.army/logout");
+        const logoutURL = "https://auth.metawarrior.army/oauth2/sessions/logout?client_id="+process.env.OAUTH_CLIENTID+"&id_token_hint="+token.id_token+"&post_logout_redirect_uri="+encodeURIComponent("https://nft.metawarrior.army/logout");
         //console.log(logoutURL);
         push(logoutURL);
         
@@ -202,7 +202,7 @@ function Index({ session, token }) {
 
        // Function for adding the chain to the user's wallet if they don't have it
     const addChain = async () => {
-        await walletClient.addChain({ chain: polygonZkEvmTestnet });
+        await walletClient.addChain({ chain: sepolia });
         switchNetwork(project.BLOCKCHAIN_ID);
     }
 
@@ -216,11 +216,14 @@ function Index({ session, token }) {
         const usernameLowered = String(username.value).toLowerCase();
         const error_msg = document.getElementById('error_msg');
         const buildButton = document.getElementById('buildNFT');
+        const spinner = document.getElementById('spinner');
+        spinner.hidden = false;
 
         // Make sure we have something
         if(username.value.length < 1){
             const error_msg = document.getElementById('error_msg');
             error_msg.innerText = "Username cannot be blank.";
+            spinner.hidden = true;
             return false;
         }
 
@@ -274,10 +277,11 @@ function Index({ session, token }) {
         
         // Set NFT CID in state
         nftUrl = 'ipfs://'+NFT;
-        console.log(nftUrl);
+        //console.log(nftUrl);
         
         const button = document.getElementById("buildNFT");
         button.hidden = true;
+        spinner.hidden = true;
         // Execute transaction
         push('https://nft.metawarrior.army/mint?tokenURI='+nftUrl);
     }
@@ -293,7 +297,8 @@ function Index({ session, token }) {
         setHydrated(true);
         if(nftUrl){
             setNftReady(nftUrl);
-            console.log(nftReady);
+            //
+            //console.log(nftReady);
         }
         
     }, []);
@@ -306,7 +311,7 @@ function Index({ session, token }) {
     // Not sure why I have to do this for the first time someone connects a wallet. 
     // The React UI works fine after that.
     const checkConnection = async () => {
-        console.log(nftReady);
+        //console.log(nftReady);
         try{
             if(isConnected){
                 // Need to validate isUser and txHash
@@ -330,7 +335,7 @@ function Index({ session, token }) {
                                 setIsUser(data.username);
                                 setTxHash(data.tx_hash);
                                 setNftReady(data.nft_0_cid);
-                                console.log(data.nft_0_cid);
+                                //console.log(data.nft_0_cid);
                             }
                             else{
                                 setIsUser(data.username);
@@ -373,7 +378,7 @@ function Index({ session, token }) {
                         <>
                         <span>Congrats! You are now a member of MetaWarrior Army!</span>
                         <br></br>
-                        <span className="small">You can view your mint transaction <a href={("https://testnet-zkevm.polygonscan.com/tx/"+txHash)} className="link-light" target="_blank">here</a>.</span>
+                        <span className="small">You can view your mint transaction <a href={(project.BLOCKEXPLORER+txHash)} className="link-light" target="_blank">here</a>.</span>
                         <br></br>
                         <span className="small">You can view your NFT at your <a href="https://www.metawarrior.army/profile" className="link-light">profile</a>.</span>
                         </>
@@ -392,6 +397,12 @@ function Index({ session, token }) {
             <hr/>
             <br></br>
             
+            <div id="spinner" className="spinner-border text-secondary" role="status"
+                hidden={isLoading ? false : true}
+            >
+                <span className="sr-only"></span>
+            </div>
+
             <div id="form" hidden=
                 {
                     !session ? true :
@@ -422,7 +433,7 @@ function Index({ session, token }) {
                         hidden={
                             chain ? 
                             (chain.id != project.BLOCKCHAIN_ID) ? false : true : true
-                        }>Connect to zkEvm</button>
+                        }>Connect to Sepolia</button>
                     <button id="buildNFT" type="submit" 
                         onClick={build_nft} 
                         className="btn btn-outline-secondary btn-lg w-100" 

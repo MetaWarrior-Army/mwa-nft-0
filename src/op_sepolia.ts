@@ -1,3 +1,5 @@
+// Custom OP Sepolia Chain for Wagmi
+
 import { Chain } from 'wagmi'
  
 export const op_sepolia = {

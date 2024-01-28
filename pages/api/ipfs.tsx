@@ -1,9 +1,5 @@
 // NextJS API Helpers
 import type { NextApiRequest, NextApiResponse } from 'next'
-// KUBO (IPFS) RPC CLIENT
-// import { create, globSource } from 'kubo-rpc-client'
-// PROJECT CONFIG
-//import { project } from '../../src/config.jsx';
 // DB Connection
 import { Pool } from "pg";
 //Next Auth Server Session
@@ -13,9 +9,9 @@ import { authOptions } from "./auth/[...nextauth]";
 // for reading files into blob streams for web3Client upload.
 // @ts-ignore 
 import { filesFromPaths } from 'files-from-path';
-
+// Web3.Storage
 import {client} from '../../src/web3storage.jsx';
-
+// Setup DB Connection
 const ipfs_db_conn = new Pool({
   user: process.env.PGSQL_USER,
   password: process.env.PGSQL_PASSWORD,
@@ -28,8 +24,7 @@ type ResponseData = {
   cid: string
 }
 
-//const client = create({url: process.env.IPFS_RPC_URI})
-
+// MAIN HANDLER
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ResponseData>
@@ -66,6 +61,7 @@ export default async function handler(
     const fs = require('fs');
     const avatar = jdenticon.toPng(address,100);
     const filename = process.env.NFT_AVATAR_PATH+address+process.env.NFT_IMAGE_FILEEXT;
+    // Save image to Filesystem
     fs.writeFileSync(filename,avatar);
     
     //console.log("uploadIPFS");
@@ -77,11 +73,12 @@ export default async function handler(
     try{
       //const avatar_cid = client.addAll(globSource(String(process.env.NFT_AVATAR_PATH),address+'*'));
       const avatarPath = process.env.NFT_AVATAR_PATH+address+'.png';
-      console.log(avatarPath);
+      //console.log(avatarPath);
       const avatar_files = await filesFromPaths([avatarPath]);
       const avatar_cid = await client.uploadFile(avatar_files[0]);
+      // GET AVATAR CID
       avatarCID = avatar_cid;
-      console.log(avatarCID);
+      //console.log(avatarCID);
 
       // build JSON
       nftJSON = {
@@ -107,15 +104,17 @@ export default async function handler(
 
     const nftJSONString = JSON.stringify(nftJSON);
     const nftPath = process.env.NFT_JSON_PATH+address+'.json';
-    console.log(nftPath);
+    //console.log(nftPath);
 
     try{
+        // WRITE NFT JSON TO FILESYSTEM
         fs.writeFileSync(nftPath,nftJSONString);
         //const nft_cid = client.addAll(globSource(String(process.env.NFT_JSON_PATH), address+'*'));
         const nft_files = await filesFromPaths(nftPath);
         const nft_cid = await client.uploadFile(nft_files[0]);
+        // GET NFT JSON CID
         nftCID = nft_cid;
-        console.log(nftCID);
+        //console.log(nftCID);
     }
     catch(error){
         console.log(error);

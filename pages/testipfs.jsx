@@ -1,3 +1,6 @@
+// This page is for testing various ipfs providers
+
+
 //Next Auth Server Session
 import { useSession, getCsrfToken, signIn, signOut } from "next-auth/react";
 import { getToken } from "next-auth/jwt"

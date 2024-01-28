@@ -2,7 +2,7 @@
 import NextAuth from "next-auth";
 
 console.log(process.env.OAUTH_CLIENTSECRET);
-// MWA Oauth
+// MWA OAuth2 IDP
 const MWAProvider = {
   id: "MWA",
   name: "MetaWarrior Army",
