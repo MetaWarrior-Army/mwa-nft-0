@@ -78,7 +78,7 @@ export default async function handler(
             }
             else{
                 // This shouldn't happen because we're supposed to authenticate users and record their address then during auth
-                //console.log("RESULTS ERROR");
+                console.log("RESULTS ERROR");
                 res.status(200).json({ username: '', tx_hash: '', status: 'unknownUser'});
                 return;
             }
