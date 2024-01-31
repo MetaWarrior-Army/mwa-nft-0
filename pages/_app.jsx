@@ -15,12 +15,8 @@ import { infuraProvider } from 'wagmi/providers/infura';
 import { polygon, polygonZkEvmTestnet, sepolia, optimismSepolia } from "wagmi/chains";
 import { op_sepolia } from '../src/op_sepolia.ts';
 
-
 // Next Auth Session Control
 import { SessionProvider } from "next-auth/react";
-
-// Global CSS
-import './css/global.css';
 
 // Project Config
 import { project } from '../src/config.jsx';
