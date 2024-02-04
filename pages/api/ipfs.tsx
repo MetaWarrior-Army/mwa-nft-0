@@ -44,7 +44,7 @@ export default async function handler(
   const { test, nonce, username, address } = req.body
 
   const usernameLowered = String(username).toLowerCase();
-  console.log(usernameLowered);
+  //console.log(usernameLowered);
   
   if(req.method == 'POST'){
     // Some stats about the NFT we're creating

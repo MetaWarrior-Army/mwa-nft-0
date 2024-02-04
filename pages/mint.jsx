@@ -14,36 +14,25 @@ import { useAccount,
     usePrepareContractWrite,
     useWaitForTransaction,
     useSwitchNetwork,
-    useWalletClient,
-    useWriteContract } from "wagmi";
+    useWalletClient } from "wagmi";
+
 // chains
-import { polygon, polygonZkEvmTestnet, sepolia, optimismSepolia } from "wagmi/chains";
-import { op_sepolia } from '../src/op_sepolia.ts';
-import { parseEther, parseGwei } from 'viem';
+//import { polygon, polygonZkEvmTestnet, sepolia, optimismSepolia } from "wagmi/chains";
+//import { op_sepolia } from '../src/op_sepolia.ts';
+import { parseEther } from 'viem';
 // NextJS helpers
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import Head  from "next/head";
 import Script from "next/script";
-//Next Auth Server Session
-import { useSession, getCsrfToken, signIn, signOut } from "next-auth/react";
 import { getToken } from "next-auth/jwt"
 import { getServerSession } from "next-auth";
 import { authOptions } from "./api/auth/[...nextauth].js";
 // PROJECT CONFIG
 import { project } from '../src/config.jsx';
-// BLOCKED USERNAMES
-import { blocked_users } from "../src/blocked_usernames.jsx";
+
 // Push
 import { push } from 'next/router';
 
-
-
-
-
-// For cleaning username input
-const word_re = /^\w+$/;
-// IPFS API Endpoint
-const ipfsApiUrl = 'https://nft.metawarrior.army/api/ipfs';
 const isUserUrl = 'https://nft.metawarrior.army/api/isuser';
 const storeTxUrl = 'https://nft.metawarrior.army/api/storetxhash';
 
@@ -56,8 +45,8 @@ function Index({ session, token, tokenURI }) {
     const page_icon_url = project.PROJECT_ICON_URL;
     const [ isUser, setIsUser ] = useState(false);
     const [ txHash, setTxHash ] = useState(false);
-    // We set this after the CID has been established (IPFS)
-    const [ nftReady, setNftReady ] = useState('blank stuff');
+    const [ tokenId, setTokenId ]= useState(0);
+
     // Setup Web3 Connectors
     const { chain } = useNetwork();
     const { connectAsync, connectors, pendingConnector } = useConnect({
@@ -105,11 +94,8 @@ function Index({ session, token, tokenURI }) {
     });
     const { disconnectAsync } = useDisconnect();
     const { isConnected, address } = useAccount();
-    // Setup smart contract TX
     const { switchNetwork } = useSwitchNetwork();
-    //console.log(address);
-    //console.log(tokenURI);
-
+    
     ///////////////////////////////
     // NFT MINTING CONFIGURATION //
     ///////////////////////////////
@@ -132,25 +118,32 @@ function Index({ session, token, tokenURI }) {
     const { data: walletClient, isError } = useWalletClient();
     const { isSuccess, isLoading } = useWaitForTransaction({
         hash: data?.hash,
+        // Mint is successful, get tokenid
+        onSuccess(data) {
+            console.log("onSuccess");
+            const newTokenId = parseInt(data.logs[0].topics[3],16);
+            setTokenId(newTokenId);
+            console.log('Success: Token id:',newTokenId);
+        }
     });
 
-
-    if (isSuccess ) {
-        console.log("TX SUCCESSFUL");
-
-        if(data){
-            // Update user
-            var hash = data.hash;
+    // Data.hash is available after useWaitForTransaction onSuccess, 
+    // not sure how to access it inside onSuccess().
+    // Update backend upon successful mint
+    if (isSuccess){
+        console.log("isSuccess");
+        // Update user
+        if (data){
             fetch(storeTxUrl, {
                 method: 'POST',
                 headers: {
                     'Content-type': 'application/json',
                 },
-                body: JSON.stringify({address: address, tx_hash: hash, username: isUser })
+                body: JSON.stringify({address: address, tx_hash: data.hash, username: isUser, tokenid: tokenId })
             });
         }
-
     }
+    
     const mint_nft = async () => {
         write();
     }
@@ -176,7 +169,7 @@ function Index({ session, token, tokenURI }) {
 
     // Function for adding the chain to the user's wallet if they don't have it
     const addChain = async () => {
-        await walletClient.addChain({ chain: sepolia });
+        //await walletClient.addChain({ chain: sepolia });
         switchNetwork(project.BLOCKCHAIN_ID);
     }
 
@@ -207,8 +200,6 @@ function Index({ session, token, tokenURI }) {
             const username_prompt = document.getElementById('username_prompt');
             const pending = document.getElementById('pending');
             if(data){
-                //console.log("DATA:");
-                //console.log(data);
                 if(isError){
                     // safely quit here
                     pending.hidden = true;
@@ -225,8 +216,6 @@ function Index({ session, token, tokenURI }) {
                     mint_button.hidden = true;
                     //console.log(isUser);
                 }
-                
-                
             } 
         }
         catch(error){}
@@ -237,7 +226,6 @@ function Index({ session, token, tokenURI }) {
             if(isConnected){
                 // Need to validate isUser and txHash
                 // Check for current user
-                //console.log("Checking for current user");
                 fetch(isUserUrl, {
                     method: 'POST',
                     headers: {
@@ -249,7 +237,7 @@ function Index({ session, token, tokenURI }) {
                     }).then((data) => {
                         if(data){
                             if(data.status == 'unknownUser'){
-                                push('https://www.metawarrior.army/signup');
+                                push('/');
                                 //signIn();
                             }
                             if(data.tx_hash != ''){
@@ -435,8 +423,16 @@ export const getServerSideProps = (async (context) => {
     const res = context.res;
     const session = await getServerSession(req,res,authOptions);
     const token = await getToken({req});
-    //console.log(context.query);
-    //console.log(session);
+
+    if(!session){
+        return {
+            redirect: {
+                destination: '/',
+                permanent: false,
+            }
+        }
+    }
+
     var token_uri;
     if(context.query.tokenURI) {
         const re = /ipfs/

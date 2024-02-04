@@ -10,22 +10,18 @@ import { useAccount,
     useNetwork, 
     useConnect, 
     useDisconnect, 
-    useContractWrite, 
-    usePrepareContractWrite,
-    useWaitForTransaction,
-    useSwitchNetwork,
-    useWalletClient } from "wagmi";
-// chains
-import { polygon, polygonZkEvmTestnet, sepolia, optimismSepolia } from "wagmi/chains";
+    useSwitchNetwork } from "wagmi";
 
-import { op_sepolia } from '../src/op_sepolia.ts';
+// chains
+// import { polygon, polygonZkEvmTestnet, sepolia, optimismSepolia } from "wagmi/chains";
+// import { op_sepolia } from '../src/op_sepolia.ts';
 
 // NextJS helpers
 import { useEffect, useState, useRef } from 'react';
 import Head  from "next/head";
 import Script from "next/script";
 //Next Auth Server Session
-import { useSession, getCsrfToken, signIn, signOut } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { getToken } from "next-auth/jwt"
 import { getServerSession } from "next-auth";
 import { authOptions } from "./api/auth/[...nextauth]";
@@ -35,12 +31,15 @@ import { project } from '../src/config.jsx';
 import { blocked_users } from "../src/blocked_usernames.jsx";
 // Push
 import { push } from 'next/router';
+
 // For cleaning username input
 const word_re = /^\w+$/;
 // IPFS API Endpoint
 const ipfsApiUrl = 'https://nft.metawarrior.army/api/ipfs';
 const isUserUrl = 'https://nft.metawarrior.army/api/isuser';
-const storeTxUrl = 'https://nft.metawarrior.army/api/storetxhash';
+const isUniqueUrl = 'https://nft.metawarrior.army/api/isunique';
+const oauthLogoutUrl = 'https://auth.metawarrior.army/oauth2/sessions/logout?client_id=';
+const mintUrl = 'https://nft.metawarrior.army/mint?tokenURI=';
 
 // MAIN APP
 //
@@ -102,8 +101,6 @@ function Index({ session, token }) {
     const { isConnected, address } = useAccount();
     // Setup smart contract TX
     const { switchNetwork } = useSwitchNetwork();
-    
-    const { data: walletClient, isError, isLoading } = useWalletClient();
 
     // SCREEN USERNAMES
     // Later we need to check a DB of usernames
@@ -145,7 +142,7 @@ function Index({ session, token }) {
 
         // Check for unique username
         if(!error){
-            fetch('https://nft.metawarrior.army/api/isunique', {
+            fetch(isUniqueUrl, {
                 method: 'POST',
                 headers: {
                     'Content-type': 'application/json',
@@ -194,7 +191,7 @@ function Index({ session, token }) {
     }
 
     const logout = async () => {
-        const logoutURL = "https://auth.metawarrior.army/oauth2/sessions/logout?client_id="+process.env.OAUTH_CLIENTID+"&id_token_hint="+token.id_token+"&post_logout_redirect_uri="+encodeURIComponent("https://nft.metawarrior.army/logout");
+        const logoutURL = oauthLogoutUrl+process.env.OAUTH_CLIENTID+"&id_token_hint="+token.id_token+"&post_logout_redirect_uri="+encodeURIComponent("https://nft.metawarrior.army/logout");
         //console.log(logoutURL);
         push(logoutURL);
         
@@ -202,7 +199,6 @@ function Index({ session, token }) {
 
        // Function for adding the chain to the user's wallet if they don't have it
     const addChain = async () => {
-        await walletClient.addChain({ chain: sepolia });
         switchNetwork(project.BLOCKCHAIN_ID);
     }
 
@@ -228,7 +224,7 @@ function Index({ session, token }) {
         }
 
         // Check for unique username
-        fetch('https://nft.metawarrior.army/api/isunique', {
+        fetch(isUniqueUrl, {
             method: 'POST',
             headers: {
                 'Content-type': 'application/json',
@@ -283,7 +279,7 @@ function Index({ session, token }) {
         button.hidden = true;
         spinner.hidden = true;
         // Execute transaction
-        push('https://nft.metawarrior.army/mint?tokenURI='+nftUrl);
+        push(mintUrl+nftUrl);
     }
 
     // This is a workaround for hydration errors 
@@ -328,8 +324,7 @@ function Index({ session, token }) {
                     }).then((data) => {
                         if(data){
                             if(data.status == 'unknownUser'){
-                                push('https://www.metawarrior.army/signup');
-                                //signIn();
+                                disconnectAsync();
                             }
                             if(data.tx_hash != ''){
                                 setIsUser(data.username);
@@ -397,9 +392,7 @@ function Index({ session, token }) {
             <hr/>
             <br></br>
             
-            <div id="spinner" className="spinner-border text-secondary" role="status"
-                hidden={isLoading ? false : true}
-            >
+            <div id="spinner" className="spinner-border text-secondary mb-1" role="status" hidden={true}>
                 <span className="sr-only"></span>
             </div>
 
@@ -465,8 +458,7 @@ function Index({ session, token }) {
                         >
                         {connector.name}
                         {!connector.ready && ' (unsupported)'}
-                        {isLoading &&
-                        connector.id === pendingConnector?.id &&
+                        {connector.id === pendingConnector?.id &&
                         ' (connecting)'}
                         </button>
                     </div>

@@ -16,7 +16,7 @@ contract MWANFT is ERC721URIStorage, Ownable {
     uint public constant mintPrice = (0.02 ether);
     uint public constant supply = 100;
     
-    constructor(address initialOwner) Ownable(initialOwner) ERC721("MWANFT", "MWA") { }
+    constructor(address initialOwner) Ownable(initialOwner) ERC721("MetaWarrior Army Founding Member", "MWAFNDR") { }
 
     // Change contract owner
     function changeOwner(address newOwner)
@@ -69,17 +69,34 @@ contract MWANFT is ERC721URIStorage, Ownable {
 
     // Soulbound NFT Features
     function burn(uint256 tokenId) external {
-        require(ownerOf(tokenId) == msg.sender, "Only the owner of the token can burn it.");
+        require(ownerOf(tokenId) == msg.sender, "Only the owner of the NFT can burn it.");
         _burn(tokenId);
     }
+    
+    function _update(address to, uint256 tokenId, address auth)
+        internal
+        override(ERC721)
+        returns (address)
+    {
+        address from = _ownerOf(tokenId);
+        if (from != address(0) && to != address(0)) {
+            revert("Soulbound NFT: Transfer reverted");
+        }
 
+        return super._update(to, tokenId, auth);
+    }
+    
+    /*
     function transferFrom(address from, address to, uint256 tokenId) public virtual override(ERC721,IERC721) {
-        require(from == address(0),"This is a non-transferable Soulbound NFT.");
+        require(from == address(0) && to == address(0),"This is a non-transferable Soulbound NFT.");
         super.transferFrom(from, to, tokenId);
     }
 
     function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) public virtual override(ERC721,IERC721) {
-        require(from == address(0),"This is a non-transferable Soulbound NFT.");
+        require(from == address(0) && to == address(0),"This is a non-transferable Soulbound NFT.");
         super.safeTransferFrom(from, to, tokenId, data);
     }
+    */
+
+
 }

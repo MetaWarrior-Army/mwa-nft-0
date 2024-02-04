@@ -49,7 +49,6 @@ export default async function handler(
   const session = await getServerSession(req,res,authOptions as NextAuthOptions);
   
   if(session){
-    //console.log(session);
   }
   else{
     console.log("No Session");
@@ -57,10 +56,11 @@ export default async function handler(
     return;
   }
 
-  const { nonce, address, tx_hash, username } = req.body;
+  const { nonce, address, tx_hash, username, tokenid } = req.body;
 
   if(req.method == 'POST'){
-    if(address && tx_hash){
+    if(address && tx_hash && (tokenid > 0)){
+      //console.log("TokenId: "+tokenid);
 
       // Okay, we have a tx hash
       // We need to make sure it's successful before continuing.
@@ -69,7 +69,7 @@ export default async function handler(
       // In this example we're using Polygon zkEVM Testnet.
       // So we'll try to use that.
       const tx_status = await checkTx(tx_hash);
-      console.log(tx_status);
+      
       // If the Tx failed then die
       if(String(tx_status) == "false"){
         res.status(500);
@@ -91,7 +91,7 @@ export default async function handler(
       }
 
       // Update user db
-      const update_query = "UPDATE users SET nft_0_tx='"+tx_hash+"' WHERE address='"+address+"'";
+      const update_query = "UPDATE users SET nft_0_tx='"+tx_hash+"',nft_0_id="+tokenid+" WHERE address='"+address+"'";
       const update_result = await storetx_db_conn.query(update_query);
       if(update_result.rowCount != null){
           if(update_result.rowCount > 0){
