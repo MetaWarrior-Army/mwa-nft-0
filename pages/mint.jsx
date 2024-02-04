@@ -315,18 +315,6 @@ function Index({ session, token, tokenURI }) {
                 }>
                 
                 <div className="form-group">
-                    <div className="input-group mb-2">
-                        <div className="input-group-prepend">
-                            <div className="input-group-text" hidden={isUser ? true : false}>Username</div>
-                        </div>
-                        <input type="text" 
-                            name="username" 
-                            className="form-control" 
-                            id="username" 
-                            hidden={isUser ? true : false}
-                            defaultValue={isUser ? isUser : ''}></input>
-                    </div>
-                    <br></br>
                     <div>
                     <button id="zkevm" type="submit" 
                         onClick={() => addChain()} 
