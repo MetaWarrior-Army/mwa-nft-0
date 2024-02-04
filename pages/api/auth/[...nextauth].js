@@ -1,7 +1,6 @@
 // NextJS Auth
 import NextAuth from "next-auth";
 
-console.log(process.env.OAUTH_CLIENTSECRET);
 // MWA OAuth2 IDP
 const MWAProvider = {
   id: "MWA",

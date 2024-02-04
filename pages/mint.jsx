@@ -64,7 +64,7 @@ function Index({ session, token, tokenURI }) {
 
             // Check for current user
             //console.log("Checking for current user");
-            fetch(isUserUrl, {
+            fetch(project.IS_USER_URL, {
                 method: 'POST',
                 headers: {
                     'Content-type': 'application/json',
@@ -120,10 +120,8 @@ function Index({ session, token, tokenURI }) {
         hash: data?.hash,
         // Mint is successful, get tokenid
         onSuccess(data) {
-            console.log("onSuccess");
             const newTokenId = parseInt(data.logs[0].topics[3],16);
             setTokenId(newTokenId);
-            console.log('Success: Token id:',newTokenId);
         }
     });
 
@@ -131,7 +129,6 @@ function Index({ session, token, tokenURI }) {
     // not sure how to access it inside onSuccess().
     // Update backend upon successful mint
     if (isSuccess){
-        console.log("isSuccess");
         // Update user
         if (data){
             fetch(storeTxUrl, {
@@ -226,7 +223,7 @@ function Index({ session, token, tokenURI }) {
             if(isConnected){
                 // Need to validate isUser and txHash
                 // Check for current user
-                fetch(isUserUrl, {
+                fetch(project.IS_USER_URL, {
                     method: 'POST',
                     headers: {
                         'Content-type': 'application/json',

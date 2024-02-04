@@ -69,7 +69,7 @@ function Index({ session, token }) {
 
             // Check for current user
             //console.log("Checking for current user");
-            fetch(isUserUrl, {
+            fetch(project.IS_USER_URL, {
                 method: 'POST',
                 headers: {
                     'Content-type': 'application/json',
@@ -122,7 +122,7 @@ function Index({ session, token }) {
             button.disabled = true;
             error = true;
         }
-        else if(!word_re.exec(event.target.value)){
+        else if(!project.username_word_re.exec(event.target.value)){
             // Non word character
             error_msg.innerText = "Invalid character in username.";
             button.disabled = true;
@@ -142,7 +142,7 @@ function Index({ session, token }) {
 
         // Check for unique username
         if(!error){
-            fetch(isUniqueUrl, {
+            fetch(project.IS_UNIQUE_URL, {
                 method: 'POST',
                 headers: {
                     'Content-type': 'application/json',
@@ -191,7 +191,7 @@ function Index({ session, token }) {
     }
 
     const logout = async () => {
-        const logoutURL = oauthLogoutUrl+process.env.OAUTH_CLIENTID+"&id_token_hint="+token.id_token+"&post_logout_redirect_uri="+encodeURIComponent("https://nft.metawarrior.army/logout");
+        const logoutURL = project.OAUTH_LOGOUT_URL+process.env.OAUTH_CLIENTID+"&id_token_hint="+token.id_token+"&post_logout_redirect_uri="+encodeURIComponent("https://nft.metawarrior.army/logout");
         //console.log(logoutURL);
         push(logoutURL);
         
@@ -224,7 +224,7 @@ function Index({ session, token }) {
         }
 
         // Check for unique username
-        fetch(isUniqueUrl, {
+        fetch(project.IS_UNIQUE_URL, {
             method: 'POST',
             headers: {
                 'Content-type': 'application/json',
@@ -258,7 +258,7 @@ function Index({ session, token }) {
         //log(usernameLowered);
         
         // Create the IPFS url
-        await fetch(ipfsApiUrl, {
+        await fetch(project.IPFS_API_URL, {
             method: 'POST',
             headers: {
                 'Content-type': 'application/json',
@@ -279,7 +279,7 @@ function Index({ session, token }) {
         button.hidden = true;
         spinner.hidden = true;
         // Execute transaction
-        push(mintUrl+nftUrl);
+        push(project.MINT_URL+nftUrl);
     }
 
     // This is a workaround for hydration errors 
@@ -313,7 +313,7 @@ function Index({ session, token }) {
                 // Need to validate isUser and txHash
                 // Check for current user
                 //console.log("Checking for current user");
-                fetch(isUserUrl, {
+                fetch(project.IS_USER_URL, {
                     method: 'POST',
                     headers: {
                         'Content-type': 'application/json',
@@ -517,8 +517,7 @@ export const getServerSideProps = (async (context) => {
     const res = context.res;
     const session = await getServerSession(req,res,authOptions);
     const token = await getToken({req});
-    //console.log(session);
-
+    
     if(session && token){
         //console.log(token);
         return {props: { session: session, token: token }};
