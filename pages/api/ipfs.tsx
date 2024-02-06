@@ -82,18 +82,32 @@ export default async function handler(
 
       // build JSON
       nftJSON = {
+        "description": "MetaWarrior Army Founding Member",
+        "external_url": "https://nft.metawarrior.army/NFTs/"+address+".json",
+        "image": "ipfs://"+avatarCID?.toString(),
+        "name": usernameLowered,
         "attributes": [
           {
-            "season": "Development",
-            "publisher": "https://www.metawarrior.army",
-            "quote":"Everything you want to do is on the other side of something you've never done.",
-            "username": usernameLowered,
-            "address": address
+            "trait_type": "Season",
+            "value": "Development"
           },
-        ],
-        "name": "MetaWarrior Army Founder",
-        "description": "MetaWarrior Army",
-        "image": "ipfs://"+avatarCID?.toString(),
+          {
+            "trait_type": "Publisher",
+            "value":"https://www.metawarrior.army"
+          },
+          {
+            "trait_type": "Membership Level",
+            "value": "Founder"
+          },
+          {
+            "trait_type": "username",
+            "value": usernameLowered
+          },
+          {
+            "trait_type": "address",
+            "value": address
+          }
+        ]
       };
     }
     catch(error){

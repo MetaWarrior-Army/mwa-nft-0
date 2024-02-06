@@ -213,6 +213,7 @@ function Index({ session, token }) {
         const error_msg = document.getElementById('error_msg');
         const buildButton = document.getElementById('buildNFT');
         const spinner = document.getElementById('spinner');
+        const form = document.getElementById('form');
         spinner.hidden = false;
 
         // Make sure we have something
@@ -276,6 +277,7 @@ function Index({ session, token }) {
         //console.log(nftUrl);
         
         const button = document.getElementById("buildNFT");
+        form.hidden = true;
         button.hidden = true;
         spinner.hidden = true;
         // Execute transaction
