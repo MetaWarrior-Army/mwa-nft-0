@@ -13,8 +13,8 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
 contract MWANFT is ERC721URIStorage, Ownable {
     uint256 private _tokenIds;
-    uint public constant mintPrice = (0.02 ether);
-    uint public constant supply = 100;
+    uint256 public mintPrice = (0.02 ether);
+    uint256 public supply = 100;
     
     constructor(address initialOwner) Ownable(initialOwner) ERC721("MetaWarrior Army Founding Member", "MWAFNDR") { }
 
@@ -26,6 +26,25 @@ contract MWANFT is ERC721URIStorage, Ownable {
     {
         transferOwnership(newOwner);
         return true;
+    }
+
+    function updateSupply(uint256 _supply)
+        public
+        onlyOwner()
+        returns (uint256)
+    {
+        require(_supply > _tokenIds, "New supply must be greater than current minted supply.");
+        supply = _supply;
+        return supply;
+    }
+
+    function updateMintPrice(uint256 _price)
+        public
+        onlyOwner()
+        returns (uint256)
+    {
+        mintPrice = _price;
+        return mintPrice;
     }
 
     // Mint NFT

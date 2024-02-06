@@ -112,7 +112,7 @@ function Index({ session, token, tokenURI }) {
         abi: [nftContractAbi],
         functionName: 'mintNFT',
         args: [address,tokenURI],
-        value: parseEther("0.020"),
+        value: parseEther("0.02"),
     });
     const { data, error, write } = useContractWrite(config);
     const { data: walletClient, isError } = useWalletClient();

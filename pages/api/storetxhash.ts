@@ -79,6 +79,7 @@ export default async function handler(
       else{
         // SUCCESSFUL TX -- SHOULD BE VALIDATED, FIX ABOVE
         // Go ahead and create the user's email account
+        //console.log("Creating User Mailbox");
         if(mb_create_url){
           await fetch(mb_create_url, {
             method: 'POST',
@@ -91,6 +92,7 @@ export default async function handler(
       }
 
       // Update user db
+      //console.log("Updating User in DB");
       const update_query = "UPDATE users SET nft_0_tx='"+tx_hash+"',nft_0_id="+tokenid+" WHERE address='"+address+"'";
       const update_result = await storetx_db_conn.query(update_query);
       if(update_result.rowCount != null){
