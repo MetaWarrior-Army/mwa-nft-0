@@ -41,6 +41,8 @@ src/config.jsx
 # local NFT Storage
 NFTs/
 avatars/
+public/NFTs/
+public/avatars/
 
 # Build Info
 artifacts/build-info
