@@ -361,8 +361,8 @@ function Index({ session, token }) {
           <link rel="icon" type="image/x-icon" href={page_icon_url}></link>
         </Head>
         
-        <div className="card text-bg-dark d-flex mx-auto" style={{width: 30+'rem'}}>
-          <img className="rounded w-25 mx-auto" src={page_icon_url} alt="image cap"/>
+        <div className="card text-bg-dark d-flex mx-auto mb-3" style={{width: 30+'rem'}}>
+          <img className="rounded w-25 mx-auto mt-3" src={page_icon_url} alt="image cap"/>
           <div className="card-body">
             <h5 className="card-title"><u>Mint User NFT</u></h5>
             <div id="avatar_div">
