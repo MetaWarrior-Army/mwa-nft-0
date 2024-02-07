@@ -33,9 +33,6 @@ import { project } from '../src/config.jsx';
 // Push
 import { push } from 'next/router';
 
-const isUserUrl = 'https://nft.metawarrior.army/api/isuser';
-const storeTxUrl = 'https://nft.metawarrior.army/api/storetxhash';
-
 // MAIN APP
 //
 // index
@@ -45,7 +42,6 @@ function Index({ session, token, tokenURI }) {
     const page_icon_url = project.PROJECT_ICON_URL;
     const [ isUser, setIsUser ] = useState(false);
     const [ txHash, setTxHash ] = useState(false);
-    const [ tokenId, setTokenId ]= useState(0);
 
     // Setup Web3 Connectors
     const { chain } = useNetwork();
@@ -99,6 +95,7 @@ function Index({ session, token, tokenURI }) {
     ///////////////////////////////
     // NFT MINTING CONFIGURATION //
     ///////////////////////////////
+    // Minimal contract ABI
     const nftContractAbi = {
         name: 'mintNFT',
         type: 'function',
@@ -106,6 +103,7 @@ function Index({ session, token, tokenURI }) {
         inputs: [{ internalType: 'address', name: 'recipient', type: 'address'}, { internalType: 'string', name: 'tokenURI', type: 'string'}],
         outputs: [],
     }
+    // Transaction Details
     const { config, error: prepareError, isError: isPrepareError, } = usePrepareContractWrite({
         chainId: project.BLOCKCHAIN_ID,
         address: project.NFT_CONTRACT_ADDRESS,
@@ -114,36 +112,22 @@ function Index({ session, token, tokenURI }) {
         args: [address,tokenURI],
         value: parseEther("0.02"),
     });
-    const { data, error, write } = useContractWrite(config);
-    const { data: walletClient, isError } = useWalletClient();
-    const { isSuccess, isLoading } = useWaitForTransaction({
+    const { data, error, write } = useContractWrite(config); // write() triggers the transaction in the user's wallet
+    const { data: walletClient, isError } = useWalletClient(); // This is handy for triggering Errors
+    const { isSuccess, isLoading } = useWaitForTransaction({ // This is where we listen for successful transactions
         hash: data?.hash,
-        // Mint is successful, get tokenid
+        // Mint is successful, get tokenid and record transaction
         onSuccess(data) {
             const newTokenId = parseInt(data.logs[0].topics[3],16);
-            setTokenId(newTokenId);
-        }
-    });
-
-    // Data.hash is available after useWaitForTransaction onSuccess, 
-    // not sure how to access it inside onSuccess().
-    // Update backend upon successful mint
-    if (isSuccess){
-        // Update user
-        if (data){
-            fetch(storeTxUrl, {
+            fetch(project.STORE_TX_URL, {
                 method: 'POST',
                 headers: {
                     'Content-type': 'application/json',
                 },
-                body: JSON.stringify({address: address, tx_hash: data.hash, username: isUser, tokenid: tokenId })
+                body: JSON.stringify({address: address, tx_hash: data.transactionHash, username: isUser, tokenid: newTokenId })
             });
         }
-    }
-    
-    const mint_nft = async () => {
-        write();
-    }
+    });
     /////////////////////////////////
     /////////////////////////////////
     /////////////////////////////////
@@ -158,35 +142,6 @@ function Index({ session, token, tokenURI }) {
         const { account, chain } = await connectAsync({connector: connector, chainId: project.BLOCKCHAIN_ID});
     };
 
-    // Disconnect Wallet Button
-    const disconnectWallet = async () => {
-        await disconnectAsync();
-        return true;
-    }
-
-    // Function for adding the chain to the user's wallet if they don't have it
-    const addChain = async () => {
-        //await walletClient.addChain({ chain: sepolia });
-        switchNetwork(project.BLOCKCHAIN_ID);
-    }
-
-    // This is a workaround for hydration errors 
-    // caused by how we're displaying the 
-    // connector options via connectors.map().
-    // Essentially we just delay rendering slightly.
-    const [hydrated, setHydrated] = useState(false);
-    useEffect(() => {
-        // This forces a rerender, so the value is rendered
-        // the second time but not the first
-        setHydrated(true);
-
-        
-    }, []);
-    if (!hydrated) {
-        // Returns null on first render, so the client and server match
-        return null;
-    }
-    
     // Another UI Workaround
     // Not sure why I have to do this for the first time someone connects a wallet. 
     // The React UI works fine after that.
@@ -219,45 +174,61 @@ function Index({ session, token, tokenURI }) {
     };
 
     const checkConnection = async () => {
-        try{
-            if(isConnected){
-                // Need to validate isUser and txHash
-                // Check for current user
-                fetch(project.IS_USER_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-type': 'application/json',
-                    },
-                    body: JSON.stringify({address: address})
-                    }).then((response) => {
-                        return response.json();            
-                    }).then((data) => {
-                        if(data){
-                            if(data.status == 'unknownUser'){
-                                push('/');
-                                //signIn();
-                            }
-                            if(data.tx_hash != ''){
-                                setIsUser(data.username);
-                                setTxHash(data.tx_hash);
+        if(!isUser || !txHash){
+            try{
+                if(isConnected){
+                    // Need to validate isUser and txHash
+                    // Check for current user
+                    await fetch(project.IS_USER_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-type': 'application/json',
+                        },
+                        body: JSON.stringify({address: address})
+                        }).then((response) => {
+                            return response.json();            
+                        }).then((data) => {
+                            if(data){
+                                if(data.status == 'unknownUser'){
+                                    push('/');
+                                    //signIn();
+                                }
+                                if(data.tx_hash != ''){
+                                    setIsUser(data.username);
+                                    setTxHash(data.tx_hash);
+                                }
+                                else{
+                                    setIsUser(data.username);
+                                }
                             }
                             else{
-                                setIsUser(data.username);
                             }
-                        }
-                        else{
-                        }
-                });
+                    });
+                }
             }
-            else{
-    
-            }
+            catch(error){}
         }
-        catch(error){}
     };
 
     checkData();
     checkConnection();
+
+    // This is a workaround for hydration errors 
+    // caused by how we're displaying the 
+    // connector options via connectors.map().
+    // Essentially we just delay rendering slightly.
+    const [hydrated, setHydrated] = useState(false);
+    useEffect(() => {
+        // This forces a rerender, so the value is rendered
+        // the second time but not the first
+        setHydrated(true);
+
+        
+    }, []);
+    if (!hydrated) {
+        // Returns null on first render, so the client and server match
+        return null;
+    }
 
     // RETURN HTML PAGE
     return (
@@ -272,8 +243,7 @@ function Index({ session, token, tokenURI }) {
         <div className="card text-bg-dark d-flex mx-auto mb-3" style={{width: 30+'rem'}}>
           <img className="rounded w-25 mx-auto mt-3" src={page_icon_url} alt="image cap"/>
           <div className="card-body">
-          <h3 className="card-title">Now Minting Founding Memberships</h3>
-            <small>Choose your username, mint your membership, and join the MetaWarrior Army as a Founding Member!</small>
+          <h3 className="card-title">Mint Your MetaWarrior Army Membership</h3>
             <p className="lead">Mint Price: <span className="text-info">0.02 ETH</span></p>
             <div id="avatar_div">
                     <svg width="80" id="avatar" height="80" data-jdenticon-value={address? address : ''}></svg>
@@ -283,7 +253,7 @@ function Index({ session, token, tokenURI }) {
                 {
                     (isSuccess||txHash) ? (
                         <>
-                        <span>Congrats! You are now a member of MetaWarrior Army!</span>
+                        <span>Congrats {(isUser)}! You are now a member of MetaWarrior Army!</span>
                         <br></br>
                         <span className="small">You can view your NFT at your <a href="https://www.metawarrior.army/profile" className="link-light">profile</a>.</span>
                         </>
@@ -321,14 +291,14 @@ function Index({ session, token, tokenURI }) {
 
                     <div>
                     <button id="zkevm" type="submit" 
-                        onClick={() => addChain()} 
+                        onClick={() => switchNetwork(project.BLOCKCHAIN_ID)} 
                         className="btn btn-outline-secondary btn-lg w-100" 
                         hidden={
                             chain ? 
                             (chain.id != project.BLOCKCHAIN_ID) ? false : true : true
                         }>Connect to Sepolia</button>
                     <button id="buildNFT" type="submit" 
-                        onClick={mint_nft} 
+                        onClick={() => write()} 
                         className="btn btn-outline-secondary btn-lg w-100" 
                         hidden={isConnected ? false : true} 
                         disabled={data ? true :
@@ -341,6 +311,16 @@ function Index({ session, token, tokenURI }) {
                     </div>
                     <br></br>
                     <p className="small text-danger" id="error_msg"></p>
+                    <div>
+                        <p className="small text-danger" id="web3_error"
+                            hidden={
+                                isSuccess ? true : false 
+                            }>{
+                            (isPrepareError || isError) && (
+                                <span>Error: {(prepareError || error)?.message}</span>
+                            )
+                        }</p>
+                    </div>
                     
                 </div>
             </div>
@@ -371,30 +351,18 @@ function Index({ session, token, tokenURI }) {
             <div className="mt-5">
             <p className="small text-success" id="web3_success">
                 {
-                    data ? (
-                        <span>View <a href={(project.BLOCKEXPLORER+data.hash)} className="link-light" target="_blank">transaction</a>.</span>
-                    ) : isConnected ? (
-                        <span>Wallet connected.</span>
+                    txHash ? (
+                        <span>View <a href={(project.BLOCKEXPLORER+txHash)} className="link-light" target="_blank">transaction</a>.</span>
                     ) : false
                 }    
             </p>
             </div>
             <div>
             <p className="small" id="disconnect" hidden={isConnected ? false : true}>
-                <a className="link-light" onClick={() => disconnectWallet()} href="#">Disconnect Wallet</a>
+                <a className="link-secondary" onClick={() => disconnectAsync()} href="#">disconnect</a>
             </p>
             </div>
-            <div>
-            <p className="small text-danger" id="web3_error"
-                hidden={
-                    isSuccess ? true :
-                    txHash ? true : false 
-                }>{
-                (isPrepareError || isError) && (
-                    <span>Error: {(prepareError || error)?.message}</span>
-                )
-            }</p>
-            </div>
+            
 
             
 

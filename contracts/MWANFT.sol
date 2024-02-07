@@ -16,7 +16,7 @@ contract MWANFT is ERC721URIStorage, Ownable {
     uint256 public mintPrice = (0.02 ether);
     uint256 public supply = 100;
     
-    constructor(address initialOwner) Ownable(initialOwner) ERC721("MetaWarrior Army Founding Member", "MWAFNDR") { }
+    constructor(address initialOwner) Ownable(initialOwner) ERC721("MetaWarrior Army Membership", "MWAMBR") { }
 
     // Change contract owner
     function changeOwner(address newOwner)

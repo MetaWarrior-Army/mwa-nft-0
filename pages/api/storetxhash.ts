@@ -13,6 +13,9 @@ const storetx_db_conn = new Pool({
   database: process.env.PGSQL_DATABASE,
 });
 
+// PROJECT CONFIG
+import { project } from '../../src/config.jsx';
+
 // API Endpoint for creating the mailbox
 const mb_create_url = process.env.MAILBOX_CREATE_URL;
 
@@ -90,6 +93,11 @@ export default async function handler(
             });
         }
       }
+
+      // Create an entry in member_nfts
+      const memupdate_query = "INSERT INTO member_nfts (token_id,token_uri,tx_hash,recipient,contract,blockexplorer_url,external_url,image_url) VALUES ("+tokenid+", 'nan', '"+tx_hash+"', '"+address+"', '"+project.NFT_CONTRACT_ADDRESS+"', '"+project.BLOCKEXPLORER+tx_hash+"', 'https://nft.metawarrior.army/NFTs/"+address+".json', 'https://nft.metawarrior.army/avatars/"+address+".png')";
+      //console.log(memupdate_query);
+      const memupdate_res = await storetx_db_conn.query(memupdate_query);
 
       // Update user db
       //console.log("Updating User in DB");
