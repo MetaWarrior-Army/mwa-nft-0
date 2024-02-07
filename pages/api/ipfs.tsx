@@ -82,7 +82,7 @@ export default async function handler(
 
       // build JSON
       nftJSON = {
-        "description": "MetaWarrior Army Founding Member",
+        "description": "MetaWarrior Army Membership",
         "external_url": "https://nft.metawarrior.army/NFTs/"+address+".json",
         "image": "ipfs://"+avatarCID?.toString(),
         "name": usernameLowered,
@@ -90,6 +90,11 @@ export default async function handler(
           {
             "trait_type": "Season",
             "value": "Development"
+          },
+          {
+            "trait_type": "Operation",
+            "value": "MWAOPRD0: Operation Campfire"
+
           },
           {
             "trait_type": "Publisher",

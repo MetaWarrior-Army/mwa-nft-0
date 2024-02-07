@@ -272,7 +272,9 @@ function Index({ session, token, tokenURI }) {
         <div className="card text-bg-dark d-flex mx-auto mb-3" style={{width: 30+'rem'}}>
           <img className="rounded w-25 mx-auto mt-3" src={page_icon_url} alt="image cap"/>
           <div className="card-body">
-            <h5 className="card-title"><u>Mint User NFT</u></h5>
+          <h3 className="card-title">Now Minting Founding Memberships</h3>
+            <small>Choose your username, mint your membership, and join the MetaWarrior Army as a Founding Member!</small>
+            <p className="lead">Mint Price: <span className="text-info">0.02 ETH</span></p>
             <div id="avatar_div">
                     <svg width="80" id="avatar" height="80" data-jdenticon-value={address? address : ''}></svg>
                 </div>
@@ -286,7 +288,7 @@ function Index({ session, token, tokenURI }) {
                         <span className="small">You can view your NFT at your <a href="https://www.metawarrior.army/profile" className="link-light">profile</a>.</span>
                         </>
                     ) : isUser ? (
-                        <span><p>You're username <b>{(isUser)}</b> has been secured.</p><p>Click below to Mint your NFT.</p></span>
+                        <span><p>You're username <span className="text-success"><b>{(isUser)}</b></span> has been secured.</p><p>Click below to Mint your NFT.</p></span>
                     ) : data ? (
                         <span>Mint executed for: <p className="text-info">{address? address : null}</p></span>
                     ) : isConnected ? (
@@ -299,7 +301,7 @@ function Index({ session, token, tokenURI }) {
 
             <hr/>
             <br></br>
-            <div id="spinner" className="spinner-border text-secondary" role="status"
+            <div id="spinner" className="spinner-border text-secondary mb-3" role="status"
                 hidden={isLoading ? false : true}
             >
                 <span className="sr-only"></span>
@@ -315,6 +317,8 @@ function Index({ session, token, tokenURI }) {
                 }>
                 
                 <div className="form-group">
+                    
+
                     <div>
                     <button id="zkevm" type="submit" 
                         onClick={() => addChain()} 

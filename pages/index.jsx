@@ -102,6 +102,18 @@ function Index({ session, token }) {
     // Setup smart contract TX
     const { switchNetwork } = useSwitchNetwork();
 
+    // ToS Check
+    const tosCheck = async (event) => {
+        const username_input = document.getElementById('username');
+        if(event.target.checked){
+            username_input.disabled = false;
+        }
+        else{
+            username_input.disabled = true;
+        }
+        //console.log(event.target.checked);
+    }
+
     // SCREEN USERNAMES
     // Later we need to check a DB of usernames
     const screenUsername = async (event) => {
@@ -364,7 +376,10 @@ function Index({ session, token }) {
         <div className="card text-bg-dark d-flex mx-auto mb-3" style={{width: 30+'rem'}}>
           <img className="rounded w-25 mx-auto mt-3" src={page_icon_url} alt="image cap"/>
           <div className="card-body">
-            <h5 className="card-title"><u>Mint User NFT</u></h5>
+          <h3 className="card-title">Now Minting Founding Memberships</h3>
+            <small>Choose your username, mint your membership, and join the MetaWarrior Army as a Founding Member!</small>
+            <p className="lead">Mint Price: <span className="text-info">0.02 ETH</span></p>
+            <hr/>
             <div id="avatar_div">
                     <svg width="80" id="avatar" height="80" data-jdenticon-value={address? address : ''}></svg>
                 </div>
@@ -384,14 +399,14 @@ function Index({ session, token }) {
                     ) : isUser ? (
                         <span>You're username <b>{(isUser)}</b> has been secured.</span>
                     ) : isConnected ? (
-                        <span>Choose a username for your wallet address: <p className="text-info">{address? address : null}</p></span>
+                        <span>Choose a username for your wallet address: <p className="text-success">{address? address : null}</p></span>
                     ) : (
                         <span>Choose your username at MetaWarrior Army</span>
                     )
                 }
             </div>
 
-            <hr/>
+            
             <br></br>
             
             <div id="spinner" className="spinner-border text-secondary mb-1" role="status" hidden={true}>
@@ -408,6 +423,13 @@ function Index({ session, token }) {
                 }>
                 
                 <div className="form-group">
+                    <div className="form-check mb-3">
+                        <input className="form-check-input" type="checkbox" value="" id="tos-check" onChange={tosCheck}/>
+                        <label className="form-check-label text-info" for="tos-check">
+                            I agree to the <a className="link-light" target="_blank" href="https://www.metawarrior.army/tos">Terms of Service</a>.
+                        </label>
+                    </div>
+
                     <div className="input-group mb-2">
                         <div className="input-group-prepend">
                             <div className="input-group-text" hidden={isUser ? true : false}>Username</div>
@@ -418,7 +440,8 @@ function Index({ session, token }) {
                             id="username" 
                             onChange={screenUsername}
                             hidden={isUser ? true : false}
-                            defaultValue={isUser ? isUser : ''}></input>
+                            defaultValue={isUser ? isUser : ''}
+                            disabled={true}></input>
                     </div>
                     <br></br>
                     <div>
