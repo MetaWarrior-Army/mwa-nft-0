@@ -18,6 +18,7 @@ import { project } from '../../src/config.jsx';
 
 // API Endpoint for creating the mailbox
 const mb_create_url = process.env.MAILBOX_CREATE_URL;
+console.log("Creating mailbox by posting to: "+mb_create_url);
 
 type ResponseData = {
   success: boolean
