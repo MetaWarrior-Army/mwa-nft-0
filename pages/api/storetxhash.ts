@@ -83,7 +83,6 @@ export default async function handler(
       else{
         // SUCCESSFUL TX -- SHOULD BE VALIDATED, FIX ABOVE
         // Go ahead and create the user's email account
-        //console.log("Creating User Mailbox");
         if(mb_create_url){
           await fetch(mb_create_url, {
             method: 'POST',
@@ -93,26 +92,27 @@ export default async function handler(
             body: JSON.stringify({username: username, key: process.env.MAILBOX_CREATE_KEY}),
             });
         }
-      }
 
-      // Create an entry in member_nfts
-      const memupdate_query = "INSERT INTO member_nfts (token_id,token_uri,tx_hash,recipient,contract,blockexplorer_url,external_url,image_url) VALUES ("+tokenid+", 'nan', '"+tx_hash+"', '"+address+"', '"+project.NFT_CONTRACT_ADDRESS+"', '"+project.BLOCKEXPLORER+tx_hash+"', 'https://nft.metawarrior.army/NFTs/"+address+".json', 'https://nft.metawarrior.army/avatars/"+address+".png')";
-      //console.log(memupdate_query);
-      const memupdate_res = await storetx_db_conn.query(memupdate_query);
+        // Create an entry in member_nfts
+        const memupdate_query = "INSERT INTO member_nfts (token_id,token_uri,tx_hash,recipient,contract,blockexplorer_url,external_url,image_url) VALUES ("+tokenid+", 'nan', '"+tx_hash+"', '"+address+"', '"+project.NFT_CONTRACT_ADDRESS+"', '"+project.BLOCKEXPLORER+tx_hash+"', 'https://nft.metawarrior.army/NFTs/"+address+".json', 'https://nft.metawarrior.army/avatars/"+address+".png')";
+        //console.log(memupdate_query);
+        const memupdate_res = await storetx_db_conn.query(memupdate_query);
 
-      // Update user db
-      //console.log("Updating User in DB");
-      const update_query = "UPDATE users SET nft_0_tx='"+tx_hash+"',nft_0_id="+tokenid+" WHERE address='"+address+"'";
-      const update_result = await storetx_db_conn.query(update_query);
-      if(update_result.rowCount != null){
-          if(update_result.rowCount > 0){
-              res.status(200).json({success: true});
-              return;
-          }
-          else{
-              res.status(500);
-              return;
-          }
+        // Update user db
+        //console.log("Updating User in DB");
+        const update_query = "UPDATE users SET nft_0_tx='"+tx_hash+"',nft_0_id="+tokenid+" WHERE address='"+address+"'";
+        const update_result = await storetx_db_conn.query(update_query);
+        if(update_result.rowCount != null){
+            if(update_result.rowCount > 0){
+                res.status(200).json({success: true});
+                return;
+            }
+            else{
+                res.status(500);
+                return;
+            }
+        }
+
       }
     }
     else{
