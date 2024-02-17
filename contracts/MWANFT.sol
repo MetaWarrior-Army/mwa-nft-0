@@ -18,36 +18,7 @@ contract MWANFT is ERC721URIStorage, Ownable {
     
     constructor(address initialOwner) Ownable(initialOwner) ERC721("MetaWarrior Army Membership", "MWAMBR") { }
 
-    // Change contract owner
-    function changeOwner(address newOwner)
-        public
-        onlyOwner()
-        returns (bool)
-    {
-        transferOwnership(newOwner);
-        return true;
-    }
-
-    function updateSupply(uint256 _supply)
-        public
-        onlyOwner()
-        returns (uint256)
-    {
-        require(_supply > _tokenIds, "New supply must be greater than current minted supply.");
-        supply = _supply;
-        return supply;
-    }
-
-    function updateMintPrice(uint256 _price)
-        public
-        onlyOwner()
-        returns (uint256)
-    {
-        mintPrice = _price;
-        return mintPrice;
-    }
-
-    // Mint NFT
+    // Mint NFT 
     function mintNFT(address recipient, string memory tokenURI)
         public 
         payable
@@ -63,17 +34,42 @@ contract MWANFT is ERC721URIStorage, Ownable {
         return tokenId;
     }
 
-    // Get contract Balance
-    function getCBalance()
+    // Burn NFT
+    function burn(uint256 tokenId) external {
+        require(ownerOf(tokenId) == msg.sender, "Only the owner of the NFT can burn it.");
+        _burn(tokenId);
+    }
+    
+    // SOULBOUND: Block transfers
+    function transferFrom(address from, address to, uint256 tokenId) public virtual override(ERC721,IERC721) {
+        revert("This is a Soulbound NFT, transfers are not allowed.");
+    }
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) public virtual override(ERC721,IERC721) {
+        revert("This is a Soulbound NFT, transfers are not allowed.");
+    }
+
+    // Update token supply
+    function updateSupply(uint256 _supply)
         public
-        view 
         onlyOwner()
         returns (uint256)
     {
-        return address(this).balance;
+        require(_supply > _tokenIds, "New supply must be greater than current minted supply.");
+        supply = _supply;
+        return supply;
     }
 
-    // Withdraw Eth from contract
+    // Update Mint Price
+    function updateMintPrice(uint256 _price)
+        public
+        onlyOwner()
+        returns (uint256)
+    {
+        mintPrice = _price;
+        return mintPrice;
+    }
+    
+    // Withdraw Eth to Owner
     function withdraw()
         public 
         payable
@@ -85,37 +81,4 @@ contract MWANFT is ERC721URIStorage, Ownable {
         require(success, "Withdraw failed.");
         return true;
     }
-
-    // Soulbound NFT Features
-    function burn(uint256 tokenId) external {
-        require(ownerOf(tokenId) == msg.sender, "Only the owner of the NFT can burn it.");
-        _burn(tokenId);
-    }
-    
-    function _update(address to, uint256 tokenId, address auth)
-        internal
-        override(ERC721)
-        returns (address)
-    {
-        address from = _ownerOf(tokenId);
-        if (from != address(0) && to != address(0)) {
-            revert("Soulbound NFT: Transfer reverted");
-        }
-
-        return super._update(to, tokenId, auth);
-    }
-    
-    /*
-    function transferFrom(address from, address to, uint256 tokenId) public virtual override(ERC721,IERC721) {
-        require(from == address(0) && to == address(0),"This is a non-transferable Soulbound NFT.");
-        super.transferFrom(from, to, tokenId);
-    }
-
-    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) public virtual override(ERC721,IERC721) {
-        require(from == address(0) && to == address(0),"This is a non-transferable Soulbound NFT.");
-        super.safeTransferFrom(from, to, tokenId, data);
-    }
-    */
-
-
 }
