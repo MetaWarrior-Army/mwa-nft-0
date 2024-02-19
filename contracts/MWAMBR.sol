@@ -1,4 +1,4 @@
-// MWA Founder NFT //
+// MWA Membership NFT //
 /////////////////////
 // A Soulbound NFT the owner can burn.
 // Anyone can mint.
@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
-contract MWANFT is ERC721URIStorage, Ownable {
+contract MWAMBR is ERC721URIStorage, Ownable {
     uint256 private _tokenIds;
     uint256 public mintPrice = (0.02 ether);
     uint256 public supply = 100;
@@ -24,7 +24,8 @@ contract MWANFT is ERC721URIStorage, Ownable {
         payable
         returns (uint256)
     {
-        require(msg.value == mintPrice, "Provide more ETH");
+        require(balanceOf(msg.sender) == 0, "Max Mint per wallet reached");
+        require(msg.value == mintPrice, "0.02 ETH to Mint");
         uint256 tokenId = _tokenIds;
         require(tokenId < supply, "No more NFTs");
         _mint(recipient, tokenId);

@@ -1,12 +1,12 @@
 {
   "_format": "hh-sol-cache-2",
   "files": {
-    "/home/mwa/www/mwa-nft-0/contracts/MWANFT.sol": {
-      "lastModificationDate": 1705299825298,
-      "contentHash": "703033b1e30d9616bb33ba6e4eaebf62",
-      "sourceName": "contracts/MWANFT.sol",
+    "/home/mwa/www/mwa-nft-0/contracts/MWAMBR.sol": {
+      "lastModificationDate": 1708365778022,
+      "contentHash": "a9f67c51302a8b08eccd9a35deaf44f4",
+      "sourceName": "contracts/MWAMBR.sol",
       "solcConfig": {
-        "version": "0.8.20",
+        "version": "0.8.24",
         "settings": {
           "evmVersion": "paris",
           "optimizer": {
@@ -38,7 +38,7 @@
         "^0.8.7"
       ],
       "artifacts": [
-        "MWANFT"
+        "MWAMBR"
       ]
     },
     "/home/mwa/www/mwa-nft-0/node_modules/@openzeppelin/contracts/access/Ownable.sol": {
@@ -46,7 +46,7 @@
       "contentHash": "d3c790edc9ccf808a17c5a6cd13614fd",
       "sourceName": "@openzeppelin/contracts/access/Ownable.sol",
       "solcConfig": {
-        "version": "0.8.20",
+        "version": "0.8.24",
         "settings": {
           "evmVersion": "paris",
           "optimizer": {
@@ -84,7 +84,7 @@
       "contentHash": "1e64e2ad597dc5b2dae11346502baad4",
       "sourceName": "@openzeppelin/contracts/token/ERC721/ERC721.sol",
       "solcConfig": {
-        "version": "0.8.20",
+        "version": "0.8.24",
         "settings": {
           "evmVersion": "paris",
           "optimizer": {
@@ -128,7 +128,7 @@
       "contentHash": "50d770b698931f015309e77a750f54f6",
       "sourceName": "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol",
       "solcConfig": {
-        "version": "0.8.20",
+        "version": "0.8.24",
         "settings": {
           "evmVersion": "paris",
           "optimizer": {
@@ -169,7 +169,7 @@
       "contentHash": "67bfbc07588eb8683b3fd8f6f909563e",
       "sourceName": "@openzeppelin/contracts/utils/Context.sol",
       "solcConfig": {
-        "version": "0.8.20",
+        "version": "0.8.24",
         "settings": {
           "evmVersion": "paris",
           "optimizer": {
@@ -201,11 +201,11 @@
       ]
     },
     "/home/mwa/www/mwa-nft-0/node_modules/@openzeppelin/contracts/utils/Strings.sol": {
-      "lastModificationDate": 1699925587132,
+      "lastModificationDate": 1705299313907,
       "contentHash": "ba57ff4ddf1d9cae9d2009792795b7f6",
       "sourceName": "@openzeppelin/contracts/utils/Strings.sol",
       "solcConfig": {
-        "version": "0.8.20",
+        "version": "0.8.24",
         "settings": {
           "evmVersion": "paris",
           "optimizer": {
@@ -240,11 +240,11 @@
       ]
     },
     "/home/mwa/www/mwa-nft-0/node_modules/@openzeppelin/contracts/interfaces/draft-IERC6093.sol": {
-      "lastModificationDate": 1699925585116,
+      "lastModificationDate": 1705299313171,
       "contentHash": "4aefc698f77ecbace7f401257dfe182d",
       "sourceName": "@openzeppelin/contracts/interfaces/draft-IERC6093.sol",
       "solcConfig": {
-        "version": "0.8.20",
+        "version": "0.8.24",
         "settings": {
           "evmVersion": "paris",
           "optimizer": {
@@ -278,11 +278,11 @@
       ]
     },
     "/home/mwa/www/mwa-nft-0/node_modules/@openzeppelin/contracts/utils/introspection/ERC165.sol": {
-      "lastModificationDate": 1699925585388,
+      "lastModificationDate": 1705299313259,
       "contentHash": "6a55c353946e471d9792965d06208295",
       "sourceName": "@openzeppelin/contracts/utils/introspection/ERC165.sol",
       "solcConfig": {
-        "version": "0.8.20",
+        "version": "0.8.24",
         "settings": {
           "evmVersion": "paris",
           "optimizer": {
@@ -316,11 +316,11 @@
       ]
     },
     "/home/mwa/www/mwa-nft-0/node_modules/@openzeppelin/contracts/token/ERC721/IERC721.sol": {
-      "lastModificationDate": 1699925586808,
+      "lastModificationDate": 1705299313783,
       "contentHash": "5df8fdb527e563085847cad29e3c5f2e",
       "sourceName": "@openzeppelin/contracts/token/ERC721/IERC721.sol",
       "solcConfig": {
-        "version": "0.8.20",
+        "version": "0.8.24",
         "settings": {
           "evmVersion": "paris",
           "optimizer": {
@@ -354,11 +354,11 @@
       ]
     },
     "/home/mwa/www/mwa-nft-0/node_modules/@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol": {
-      "lastModificationDate": 1699925586880,
+      "lastModificationDate": 1705299313799,
       "contentHash": "fc8a9841f4bdd6329c26a00d5e75f4b3",
       "sourceName": "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol",
       "solcConfig": {
-        "version": "0.8.20",
+        "version": "0.8.24",
         "settings": {
           "evmVersion": "paris",
           "optimizer": {
@@ -390,11 +390,11 @@
       ]
     },
     "/home/mwa/www/mwa-nft-0/node_modules/@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol": {
-      "lastModificationDate": 1699925586868,
+      "lastModificationDate": 1705299313791,
       "contentHash": "12c206f185cb951213799561fdcaa40d",
       "sourceName": "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol",
       "solcConfig": {
-        "version": "0.8.20",
+        "version": "0.8.24",
         "settings": {
           "evmVersion": "paris",
           "optimizer": {
@@ -428,11 +428,11 @@
       ]
     },
     "/home/mwa/www/mwa-nft-0/node_modules/@openzeppelin/contracts/utils/math/Math.sol": {
-      "lastModificationDate": 1699925586980,
+      "lastModificationDate": 1705299313815,
       "contentHash": "718fa8ba0ff269c92e364c1429d9de57",
       "sourceName": "@openzeppelin/contracts/utils/math/Math.sol",
       "solcConfig": {
-        "version": "0.8.20",
+        "version": "0.8.24",
         "settings": {
           "evmVersion": "paris",
           "optimizer": {
@@ -464,11 +464,11 @@
       ]
     },
     "/home/mwa/www/mwa-nft-0/node_modules/@openzeppelin/contracts/utils/math/SignedMath.sol": {
-      "lastModificationDate": 1699925587120,
+      "lastModificationDate": 1705299313891,
       "contentHash": "b6c6bdc7aaca4fe5b680760a72e09d3e",
       "sourceName": "@openzeppelin/contracts/utils/math/SignedMath.sol",
       "solcConfig": {
-        "version": "0.8.20",
+        "version": "0.8.24",
         "settings": {
           "evmVersion": "paris",
           "optimizer": {
@@ -500,11 +500,11 @@
       ]
     },
     "/home/mwa/www/mwa-nft-0/node_modules/@openzeppelin/contracts/utils/introspection/IERC165.sol": {
-      "lastModificationDate": 1699925586588,
+      "lastModificationDate": 1705299313699,
       "contentHash": "de0163561b417b800d01749cbbe2147e",
       "sourceName": "@openzeppelin/contracts/utils/introspection/IERC165.sol",
       "solcConfig": {
-        "version": "0.8.20",
+        "version": "0.8.24",
         "settings": {
           "evmVersion": "paris",
           "optimizer": {
@@ -536,11 +536,11 @@
       ]
     },
     "/home/mwa/www/mwa-nft-0/node_modules/@openzeppelin/contracts/interfaces/IERC4906.sol": {
-      "lastModificationDate": 1699925586752,
+      "lastModificationDate": 1705299313767,
       "contentHash": "7f130e0d70179d683e9b9df0dda38a51",
       "sourceName": "@openzeppelin/contracts/interfaces/IERC4906.sol",
       "solcConfig": {
-        "version": "0.8.20",
+        "version": "0.8.24",
         "settings": {
           "evmVersion": "paris",
           "optimizer": {
@@ -575,11 +575,11 @@
       ]
     },
     "/home/mwa/www/mwa-nft-0/node_modules/@openzeppelin/contracts/interfaces/IERC165.sol": {
-      "lastModificationDate": 1699925586580,
+      "lastModificationDate": 1705299313695,
       "contentHash": "f808b485ee0cdc6768ee8385ae5f9a2a",
       "sourceName": "@openzeppelin/contracts/interfaces/IERC165.sol",
       "solcConfig": {
-        "version": "0.8.20",
+        "version": "0.8.24",
         "settings": {
           "evmVersion": "paris",
           "optimizer": {
@@ -611,11 +611,11 @@
       "artifacts": []
     },
     "/home/mwa/www/mwa-nft-0/node_modules/@openzeppelin/contracts/interfaces/IERC721.sol": {
-      "lastModificationDate": 1699925586796,
+      "lastModificationDate": 1705299313779,
       "contentHash": "d8d23fc2f55ed934d1a1b91c9afd8526",
       "sourceName": "@openzeppelin/contracts/interfaces/IERC721.sol",
       "solcConfig": {
-        "version": "0.8.20",
+        "version": "0.8.24",
         "settings": {
           "evmVersion": "paris",
           "optimizer": {
