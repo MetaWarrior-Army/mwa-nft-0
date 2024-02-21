@@ -5,7 +5,7 @@
 // Price is 0.02 ETH
 // Max supply is 100.
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -49,6 +49,7 @@ contract MWAMBR is ERC721URIStorage, Ownable {
         revert("This is a Soulbound NFT, transfers are not allowed.");
     }
 
+   
     // Update token supply
     function updateSupply(uint256 _supply)
         public
@@ -82,4 +83,5 @@ contract MWAMBR is ERC721URIStorage, Ownable {
         require(success, "Withdraw failed.");
         return true;
     }
+
 }

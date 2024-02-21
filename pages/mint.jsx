@@ -42,6 +42,7 @@ function Index({ session, token, tokenURI }) {
     const page_icon_url = project.PROJECT_ICON_URL;
     const [ isUser, setIsUser ] = useState(false);
     const [ txHash, setTxHash ] = useState(false);
+    const [ appError, setAppError ] = useState(false);
 
     // Setup Web3 Connectors
     const { chain } = useNetwork();
@@ -213,6 +214,12 @@ function Index({ session, token, tokenURI }) {
     checkData();
     checkConnection();
 
+    if(error?.message.match(/transaction/)){
+        setAppError("Insufficient Funds");
+        console.log("Insufficent Funds");
+    }
+    //else if(isPrepareError.match())
+
     // This is a workaround for hydration errors 
     // caused by how we're displaying the 
     // connector options via connectors.map().
@@ -240,7 +247,7 @@ function Index({ session, token, tokenURI }) {
           <link rel="icon" type="image/x-icon" href={page_icon_url}></link>
         </Head>
         
-        <div className="card text-bg-dark d-flex mx-auto mb-3" style={{width: 30+'rem'}}>
+        <div className="card text-bg-dark rounded shadow d-flex mx-auto mb-3" style={{width: 30+'rem'}}>
           <img className="rounded w-25 mx-auto mt-3" src={page_icon_url} alt="image cap"/>
           <div className="card-body">
           <h3 className="card-title">Mint Your MetaWarrior Army Membership</h3>
@@ -301,7 +308,8 @@ function Index({ session, token, tokenURI }) {
                         onClick={() => write()} 
                         className="btn btn-outline-secondary btn-lg w-100" 
                         hidden={isConnected ? false : true} 
-                        disabled={data ? true :
+                        disabled={ (isPrepareError || isError) ? true :
+                            data ? true :
                             !session ? true :
                             chain ?
                             (chain.id != project.BLOCKCHAIN_ID) ? true : false : false
