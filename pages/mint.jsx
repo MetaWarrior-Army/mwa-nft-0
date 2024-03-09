@@ -29,14 +29,15 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "./api/auth/[...nextauth].js";
 // PROJECT CONFIG
 import { project } from '../src/config.jsx';
-
+//DB Connection
+import { Pool } from "pg";
 // Push
 import { push } from 'next/router';
 
 // MAIN APP
 //
 // index
-function Index({ session, token, tokenURI }) {
+function Index({ session, token, tokenURI, invite }) {
     // Project configuration
     const page_title = "Mint NFT "+project.PROJECT_NAME;
     const page_icon_url = project.PROJECT_ICON_URL;
@@ -111,7 +112,7 @@ function Index({ session, token, tokenURI }) {
         abi: [nftContractAbi],
         functionName: 'mintNFT',
         args: [address,tokenURI],
-        value: parseEther("0.02"),
+        value: parseEther("0.00"),
     });
     const { data, error, write } = useContractWrite(config); // write() triggers the transaction in the user's wallet
     const { data: walletClient, isError } = useWalletClient(); // This is handy for triggering Errors
@@ -125,7 +126,7 @@ function Index({ session, token, tokenURI }) {
                 headers: {
                     'Content-type': 'application/json',
                 },
-                body: JSON.stringify({address: address, tx_hash: data.transactionHash, username: isUser, tokenid: newTokenId })
+                body: JSON.stringify({address: address, tx_hash: data.transactionHash, username: isUser, tokenid: newTokenId, invite_code: invite })
             });
         }
     });
@@ -251,7 +252,7 @@ function Index({ session, token, tokenURI }) {
           <img className="rounded w-25 mx-auto mt-3" src={page_icon_url} alt="image cap"/>
           <div className="card-body">
           <h3 className="card-title">Mint Your MetaWarrior Army Membership</h3>
-            <p className="lead">Mint Price: <span className="text-info">0.02 ETH</span></p>
+            <p className="lead">Mint Price: <span className="text-info">FREE</span></p><p className="small text-info"><i>You will need a little ETH to cover gas fees.</i></p>
             <div id="avatar_div">
                     <svg width="80" id="avatar" height="80" data-jdenticon-value={address? address : ''}></svg>
                 </div>
@@ -420,12 +421,78 @@ export const getServerSideProps = (async (context) => {
         }
     }
 
+    let { invite }  = context.query;
+    console.log(invite);
+    // Check for valid invite code
+    if(invite){
+        const mwa_db_conn = new Pool({
+            user: process.env.PGSQL_USER,
+            password: process.env.PGSQL_PASSWORD,
+            host: process.env.PGSQL_HOST,
+            port: parseInt(process.env.PGSQL_PORT),
+            database: process.env.PGSQL_DATABASE,
+          });
+
+        // check master codes
+        const check_codes_query = "SELECT * FROM codes WHERE code='"+invite+"'";
+        const check_codes_result = await mwa_db_conn.query(check_codes_query);
+        if(check_codes_result.rowCount != null){
+            if(check_codes_result.rowCount > 0){
+                // This is a valid Master Code
+            }
+            else{
+                // Not a Master Code, is it a user code?
+                const check_userinvite_query = "SELECT * FROM users WHERE invite_code='"+invite+"'";
+                const check_userinvite_result = await mwa_db_conn.query(check_userinvite_query);
+                if(check_userinvite_result.rowCount != null){
+                    if(check_userinvite_result.rowCount > 0) {
+                        // This is a valid user invite code
+                    }
+                    else{
+                        invite = false;
+                    }
+                }
+                else{
+                    invite = false;
+                }
+            }
+        }
+        else{
+            // Not a Master Code, is it a user code?
+            const check_userinvite_query = "SELECT * FROM users WHERE invite_code='"+invite+"'";
+            const check_userinvite_result = await mwa_db_conn.query(check_userinvite_query);
+            if(check_userinvite_result.rowCount != null){
+                if(check_userinvite_result.rowCount > 0) {
+                    // This is a valid user invite code
+                }
+                else{
+                    invite = false;
+                }
+            }
+            else{
+                invite = false;
+            }
+        }
+        mwa_db_conn.end();
+    }else{
+        invite = false;
+    }
+    if(invite == false){
+         // invalid invite, redirect to /
+         return {redirect: {
+            destination: "/",
+            permanent: false,
+        }};
+    }
+
+    //console.log(invite);
+
     if(session && token){
         //console.log(token);
-        return {props: { session: session, token: token, tokenURI: token_uri }};
+        return {props: { session: session, token: token, tokenURI: token_uri, invite }};
     }
     else{
-        return {props: { }};
+        return {props: { invite }};
     }
 });
 

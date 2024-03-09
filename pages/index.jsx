@@ -27,6 +27,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "./api/auth/[...nextauth]";
 // PROJECT CONFIG
 import { project } from '../src/config.jsx';
+//DB Connection
+import { Pool } from "pg";
 // BLOCKED USERNAMES
 import { blocked_users } from "../src/blocked_usernames.jsx";
 // Push
@@ -35,7 +37,7 @@ import { push } from 'next/router';
 // MAIN APP
 //
 // index
-function Index({ session, token }) {
+function Index({ session, token, invite, open4biz }) {
     // Project configuration
     const page_title = "Mint NFT "+project.PROJECT_NAME;
     const page_icon_url = project.PROJECT_ICON_URL;
@@ -174,6 +176,12 @@ function Index({ session, token }) {
         
     };
 
+    const submitInviteCode = async () => {
+        const inputInviteCode = document.getElementById("invitecode");
+        push('https://nft.metawarrior.army/?invite='+inputInviteCode.value);
+
+    }
+
     // CONNECT WEB3 WALLET
     const connectWallet = async ({connector}) => {
         // if connected, disconnect
@@ -262,7 +270,7 @@ function Index({ session, token }) {
         button.hidden = true;
         spinner.hidden = true;
         // IPFS Token URI Ready, forward to mint tx
-        push(project.MINT_URL+'ipfs://'+NFT);
+        push(project.MINT_URL+'ipfs://'+NFT+'&invite='+invite);
     }
    
     const checkConnection = async () => {
@@ -321,185 +329,252 @@ function Index({ session, token }) {
     }
 
     // RETURN HTML PAGE
-    return (
-        <>
-        <Script src="https://cdn.jsdelivr.net/npm/jdenticon@3.2.0/dist/jdenticon.min.js" integrity="sha384-yBhgDqxM50qJV5JPdayci8wCfooqvhFYbIKhv0hTtLvfeeyJMJCscRfFNKIxt43M" crossOrigin="anonymous"/>
-        <Head>
-          <title>{page_title}</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
-          <link rel="icon" type="image/x-icon" href={page_icon_url}></link>
-        </Head>
-        
-        <div className="card text-bg-dark rounded shadow d-flex mx-auto mb-3" style={{width: 30+'rem'}}>
-          <img className="rounded w-25 mx-auto mt-3" src={page_icon_url} alt="image cap"/>
-          <div className="card-body">
-            {
-                txHash ? (
-                    <>
-                    <h3 className="card-title">MetaWarrior Army Membership NFT</h3>
-                    <img width="80" src={('/avatars/'+address+'.png')}></img>
-                    <h4 className="card-title">{(isUser)}</h4>
-                    <small><a href={(project.BLOCKEXPLORER+txHash)} className="link-secondary" target="_blank">Transaction</a> | <a href={'/NFTs/'+address+'.json'} className="link-secondary" target="_blank">External</a></small>
-                    <hr/>
-                    </>
-                ) : (
-                    <>
-                    <h3 className="card-title">Now Minting Memberships</h3>
-                    <small>Choose your username, mint your membership, and join the MetaWarrior Army as a Founding Member!</small>
-                    <p className="lead">Mint Price: <span className="text-info">0.02 ETH</span></p>
-                    <hr/>
-                    <div id="avatar_div">
-                        <svg width="80" id="avatar" height="80" data-jdenticon-value={address? address : ''}></svg>
-                    </div>
-                    </>
-                )
-            }
-          
-            
-            
-            <div id="username_prompt">
-                {
-                    txHash ? (
-                        <>
-                        <a className="btn btn-lg w-100 btn-outline-secondary" href="https://www.metawarrior.army/profile">Return to your Profile</a>
-                        </>
-                    ) : isUser ? (
-                        <span>You're username <b>{(isUser)}</b> has been secured.</span>
-                    ) : isConnected ? (
-                        <span>Choose a username for your wallet address: <p className="text-success">{address? address : null}</p></span>
-                    ) : (
-                        <span>Choose your username at MetaWarrior Army</span>
-                    )
-                }
-            </div>
-
-            
-            <br></br>
-            
-            <div id="spinner" className="spinner-border text-secondary mb-1" role="status" hidden={true}>
-                <span className="sr-only"></span>
-            </div>
-
-            <div id="form" hidden=
-                {
-                    !session ? true :
-                    txHash ? true :
-                    isUser ? false :
-                    isConnected ? false : true
-                }>
-                
-                <div className="form-group">
-                    <div className="form-check mb-3">
-                        <input className="form-check-input" type="checkbox" value="" id="tos-check" onChange={tosCheck}/>
-                        <label className="form-check-label text-info" htmlFor="tos-check">
-                            I agree to the <a className="link-light" target="_blank" href="https://www.metawarrior.army/tos">Terms of Service</a>.
-                        </label>
-                    </div>
-
-                    <div className="input-group mb-2">
-                        <div className="input-group-prepend">
-                            <div className="input-group-text" hidden={isUser ? true : false}>
-                                <div id="spinner2" className="spinner-border spinner-border-sm text-secondary mb-1" role="status" hidden={true}>
-                                    <span className="sr-only"></span>
-                                </div>
-                                Username
-                            </div>
-                        </div>
-                        <input type="text" 
-                            name="username" 
-                            className="form-control" 
-                            id="username" 
-                            onChange={screenUsername}
-                            hidden={isUser ? true : false}
-                            defaultValue={isUser ? isUser : ''}
-                            disabled={true}></input>
-                    </div>
-                    
-                    <p className="small text-danger" id="error_msg"></p>
-                    <div>
-                    <button id="zkevm" type="submit" 
-                        onClick={() => switchNetwork(project.BLOCKCHAIN_ID)} 
-                        className="btn btn-outline-secondary btn-lg w-100" 
-                        hidden={
-                            chain ? 
-                            (chain.id != project.BLOCKCHAIN_ID) ? false : true : true
-                        }>Connect to Sepolia</button>
-                    <button id="buildNFT" type="submit" 
-                        onClick={build_nft} 
-                        className="btn btn-outline-secondary btn-lg w-100" 
-                        hidden={isConnected ? false : true} 
-                        disabled={!session ? true :
-                            chain ?
-                            (chain.id != project.BLOCKCHAIN_ID) ? true : false : false
-                        }>Build NFT</button>
-                    
-                    
-                    </div>
-                    <br></br>
-                    
-                    
+    if(!open4biz){
+        return(
+            <>
+            <Script src="https://cdn.jsdelivr.net/npm/jdenticon@3.2.0/dist/jdenticon.min.js" integrity="sha384-yBhgDqxM50qJV5JPdayci8wCfooqvhFYbIKhv0hTtLvfeeyJMJCscRfFNKIxt43M" crossOrigin="anonymous"/>
+            <Head>
+              <title>{page_title}</title>
+              <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+              <link rel="icon" type="image/x-icon" href={page_icon_url}></link>
+            </Head>
+            <div className="card text-bg-dark rounded shadow d-flex mx-auto mb-3" style={{width: 30+'rem'}}>
+                <img className="rounded w-25 mx-auto mt-3" src={page_icon_url} alt="image cap"/>
+                <div className="card-body">
+                    <h3>Sorry, we're not accepting new members at this time.</h3>
+                    <p className="small">Sign up for our <a href="https://www.metawarrior.army/sitrep" className="link-info">newsletter</a> to be the first to find out when new opportunities to join the MetaWarrior Army open up!</p>
                 </div>
             </div>
             
+            </>
 
-            <div id="connector_group" hidden={ isConnected ? true : false }>
-                <h5>Connect your wallet.</h5>
-                {connectors.map((connector) => (
-                    // use this div to help us style the buttons
-                    <div className="w-100" key={connector.id}>
-                        <button type="button" className="btn btn-outline-secondary btn-lg w-100"
-                            disabled={!connector.ready}
-                            key={connector.id}
-                            onClick={() => connectWallet({connector})}
-                        >
-                        {connector.name}
-                        {!connector.ready && ' (unsupported)'}
-                        {connector.id === pendingConnector?.id &&
-                        ' (connecting)'}
-                        </button>
-                    </div>
-                ))}
-            </div>
-
-            <button id="login" type="submit"
-                        onClick={() => signIn()}
-                        className="btn btn-outline-secondary btn-lg w-100"
-                        hidden={!session ? false : true}>Login
-                    </button>
-            <button id="logout" type="submit"
-                onClick={() => logout()}
-                className="btn btn-outline-secondary btn-lg w-100"
-                hidden={
-                    !session ? true: false
-                }>Logout
-            </button>
+        );
+    }
+    else if(invite){
+        return (
+            <>
+            <Script src="https://cdn.jsdelivr.net/npm/jdenticon@3.2.0/dist/jdenticon.min.js" integrity="sha384-yBhgDqxM50qJV5JPdayci8wCfooqvhFYbIKhv0hTtLvfeeyJMJCscRfFNKIxt43M" crossOrigin="anonymous"/>
+            <Head>
+              <title>{page_title}</title>
+              <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+              <link rel="icon" type="image/x-icon" href={page_icon_url}></link>
+            </Head>
             
-            <div className="mt-5">
-            <p className="small text-success" id="web3_success">
+            <div className="card text-bg-dark rounded shadow d-flex mx-auto mb-3" style={{width: 30+'rem'}}>
+              <img className="rounded w-25 mx-auto mt-3" src={page_icon_url} alt="image cap"/>
+              <div className="card-body">
                 {
+                    txHash ? (
+                        <>
+                        <h3 className="card-title">MetaWarrior Army Membership NFT</h3>
+                        <img width="80" src={('/avatars/'+address+'.png')}></img>
+                        <h4 className="card-title">{(isUser)}</h4>
+                        <small><a href={(project.BLOCKEXPLORER+txHash)} className="link-secondary" target="_blank">Transaction</a> | <a href={'/NFTs/'+address+'.json'} className="link-secondary" target="_blank">External</a></small>
+                        <hr/>
+                        </>
+                    ) : (
+                        <>
+                        <h3 className="card-title">Now Minting Memberships</h3>
+                        <small>Choose your username, mint your membership, and join the MetaWarrior Army as a Founding Member!</small>
+                        <p className="lead">Mint Price: <span className="text-info">FREE</span></p><p className="small text-info"><i>You will need a little ETH to cover gas fees.</i></p>
+                        <hr/>
+                        <div id="avatar_div">
+                            <svg width="80" id="avatar" height="80" data-jdenticon-value={address? address : ''}></svg>
+                        </div>
+                        </>
+                    )
+                }
+              
+                
+                
+                <div id="username_prompt">
+                    {
+                        txHash ? (
+                            <>
+                            <a className="btn btn-lg w-100 btn-outline-secondary" href="https://www.metawarrior.army/profile">Return to your Profile</a>
+                            </>
+                        ) : isUser ? (
+                            <span>You're username <b>{(isUser)}</b> has been secured.</span>
+                        ) : isConnected ? (
+                            <span>Choose a username for your wallet address: <p className="text-success">{address? address : null}</p></span>
+                        ) : (
+                            <span>Choose your username at MetaWarrior Army</span>
+                        )
+                    }
+                </div>
+    
+                
+                <br></br>
+                
+                <div id="spinner" className="spinner-border text-secondary mb-1" role="status" hidden={true}>
+                    <span className="sr-only"></span>
+                </div>
+    
+                <div id="form" hidden=
+                    {
+                        !session ? true :
+                        txHash ? true :
+                        isUser ? false :
+                        isConnected ? false : true
+                    }>
                     
-                }    
-            </p>
+                    <div className="form-group">
+                        <div className="form-check mb-3">
+                            <input className="form-check-input" type="checkbox" value="" id="tos-check" onChange={tosCheck}/>
+                            <label className="form-check-label text-info" htmlFor="tos-check">
+                                I agree to the <a className="link-light" target="_blank" href="https://www.metawarrior.army/tos">Terms of Service</a>.
+                            </label>
+                        </div>
+    
+                        <div className="input-group mb-2">
+                            <div className="input-group-prepend">
+                                <div className="input-group-text" hidden={isUser ? true : false}>
+                                    <div id="spinner2" className="spinner-border spinner-border-sm text-secondary mb-1" role="status" hidden={true}>
+                                        <span className="sr-only"></span>
+                                    </div>
+                                    Username
+                                </div>
+                            </div>
+                            <input type="text" 
+                                name="username" 
+                                className="form-control" 
+                                id="username" 
+                                onChange={screenUsername}
+                                hidden={isUser ? true : false}
+                                defaultValue={isUser ? isUser : ''}
+                                disabled={true}></input>
+                        </div>
+                        
+                        <p className="small text-danger" id="error_msg"></p>
+                        <div>
+                        <button id="zkevm" type="submit" 
+                            onClick={() => switchNetwork(project.BLOCKCHAIN_ID)} 
+                            className="btn btn-outline-info mb-3 btn-lg w-100" 
+                            hidden={
+                                chain ? 
+                                (chain.id != project.BLOCKCHAIN_ID) ? false : true : true
+                            }>Connect to Sepolia</button>
+                        <button id="buildNFT" type="submit" 
+                            onClick={build_nft} 
+                            className="btn btn-secondary btn-lg w-100" 
+                            hidden={isConnected ? false : true} 
+                            disabled={!session ? true :
+                                chain ?
+                                (chain.id != project.BLOCKCHAIN_ID) ? true : false : false
+                            }>Build NFT</button>
+                        
+                        
+                        </div>
+                        <br></br>
+                        
+                        
+                    </div>
+                </div>
+                
+    
+                <div id="connector_group" hidden={ isConnected ? true : false }>
+                    <h5>Connect your wallet.</h5>
+                    {connectors.map((connector) => (
+                        // use this div to help us style the buttons
+                        <div className="w-100" key={connector.id}>
+                            <button type="button" className="btn btn-outline-info btn-lg w-100"
+                                disabled={!connector.ready}
+                                key={connector.id}
+                                onClick={() => connectWallet({connector})}
+                            >
+                            {connector.name}
+                            {!connector.ready && ' (unsupported)'}
+                            {connector.id === pendingConnector?.id &&
+                            ' (connecting)'}
+                            </button>
+                        </div>
+                    ))}
+                </div>
+    
+                <button id="login" type="submit"
+                            onClick={() => signIn("MWA")}
+                            className="btn btn-secondary btn-lg w-100 mt-3"
+                            hidden={!session ? false : true}>Login
+                        </button>
+                <button id="logout" type="submit"
+                    onClick={() => logout()}
+                    className="btn btn-secondary btn-lg w-100"
+                    hidden={
+                        !session ? true: false
+                    }>Logout
+                </button>
+                
+                <div className="mt-5">
+                <p className="small text-success" id="web3_success">
+                    {
+                        
+                    }    
+                </p>
+                </div>
+                <div>
+                <p className="small" id="disconnect" hidden={isConnected ? false : true}>
+                    <a className="link-secondary" onClick={() => disconnectAsync()} href="#">disconnect</a>
+                </p>
+                </div>
+                <div>
+                <p className="small text-danger" id="web3_error"
+                    hidden={
+                        txHash ? true : false
+                    }></p>
+                </div>
+    
+              </div>
             </div>
-            <div>
-            <p className="small" id="disconnect" hidden={isConnected ? false : true}>
-                <a className="link-secondary" onClick={() => disconnectAsync()} href="#">disconnect</a>
-            </p>
-            </div>
-            <div>
-            <p className="small text-danger" id="web3_error"
-                hidden={
-                    txHash ? true : false
-                }></p>
-            </div>
+            </>
+        );
+    }
+    // No Invite Code provided
+    else{
+        return(
+        <>
+        <Script src="https://cdn.jsdelivr.net/npm/jdenticon@3.2.0/dist/jdenticon.min.js" integrity="sha384-yBhgDqxM50qJV5JPdayci8wCfooqvhFYbIKhv0hTtLvfeeyJMJCscRfFNKIxt43M" crossOrigin="anonymous"/>
+            <Head>
+              <title>{page_title}</title>
+              <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+              <link rel="icon" type="image/x-icon" href={page_icon_url}></link>
+            </Head>
+            <div className="card text-bg-dark rounded shadow d-flex mx-auto mb-3" style={{width: 30+'rem'}}>
+            <img className="rounded w-25 mx-auto mt-3" src={page_icon_url} alt="image cap"/>
+            <div className="card-body">
 
-            
 
-          </div>
+
+                <p className="lead mt-3 mb-3 p-3">An invite code is required to join MetaWarrior Army</p>
+                <p className="small mt-3 mb-3 p-3 text-info">*Invite codes are case sensitive</p>
+                <div className="form-group">
+                    <div className="input-group mb-3 p-3">
+                        <div className="input-group-prepend">
+                            <div className="input-group-text">
+                                Invite Code
+                            </div>
+                        </div>
+                        <input type="text" 
+                            name="invitecode" 
+                            className="form-control" 
+                            id="invitecode"
+                            ></input>
+                    </div>
+                    <div className=" mb-3 p-3">
+                    <button id="submitInviteCode" type="submit" 
+                        className="btn btn-secondary btn-lg w-100" 
+                        onClick={submitInviteCode}
+                        >Use Invite Code</button>
+                    </div>
+                    <br></br>
+                </div>
+            </div>
         </div>
         </>
-      );
+        );
+    }
+
 }
+    
 
 //             //
 // SERVER SIDE //
@@ -509,13 +584,95 @@ export const getServerSideProps = (async (context) => {
     const res = context.res;
     const session = await getServerSession(req,res,authOptions);
     const token = await getToken({req});
+
+    let open4biz = true;
+
+    // First let's make sure there are accounts available
+    const mwa_db_conn = new Pool({
+        user: process.env.PGSQL_USER,
+        password: process.env.PGSQL_PASSWORD,
+        host: process.env.PGSQL_HOST,
+        port: parseInt(process.env.PGSQL_PORT),
+        database: process.env.PGSQL_DATABASE,
+      });
+
+    const count_membernft_query = "SELECT * FROM member_nfts";
+    const count_membernft_results = mwa_db_conn.query(count_membernft_query);
+    if(count_membernft_results.rowCount != null){
+        if(count_membernft_results.rowCount >= process.env.MAX_MEMBERS){
+            // No more accounts remaining
+            open4biz = false;
+        }
+    }
+    //open4biz = false;
+
+    // get and check invite code:
+    let { invite } = context.query;
+    if(invite){
+        // check master codes
+        const check_codes_query = "SELECT * FROM codes WHERE code='"+invite+"'";
+        const check_codes_result = await mwa_db_conn.query(check_codes_query);
+        if(check_codes_result.rowCount != null){
+            if(check_codes_result.rowCount > 0){
+                // This is a valid Master Code
+                // Check if there is still a supply
+                if(parseInt(check_codes_result.rows[0].times_used) >= parseInt(check_codes_result.rows[0].supply)){
+                    // no more supply
+                    console.log("MASTERCODE CONSUMPTION: "+check_codes_result.rows[0].times_used);
+                    console.log("MASTERCODE SUPPLY: "+check_codes_result.rows[0].supply);
+                    invite = false;
+                }
+                else{
+                    console.log("MASTERCODE CONSUMPTION: "+check_codes_result.rows[0].times_used);
+                    console.log("MASTERCODE SUPPLY: "+check_codes_result.rows[0].supply);
+                    console.log(invite);
+                }
+            }
+            else{
+                // Not a Master Code, is it a user code?
+                const check_userinvite_query = "SELECT * FROM users WHERE invite_code='"+invite+"'";
+                const check_userinvite_result = await mwa_db_conn.query(check_userinvite_query);
+                if(check_userinvite_result.rowCount != null){
+                    if(check_userinvite_result.rowCount > 0) {
+                        // This is a valid user invite code
+                    }
+                    else{
+                        invite = false;
+                    }
+                }
+                else{
+                    invite = false;
+                }
+            }
+        }
+        else{
+            // Not a Master Code, is it a user code?
+            const check_userinvite_query = "SELECT * FROM users WHERE invite_code='"+invite+"'";
+            const check_userinvite_result = await mwa_db_conn.query(check_userinvite_query);
+            if(check_userinvite_result.rowCount != null){
+                if(check_userinvite_result.rowCount > 0) {
+                    // This is a valid user invite code
+                }
+                else{
+                    invite = false;
+                }
+            }
+            else{
+                invite = false;
+            }
+        }
+        mwa_db_conn.end();
+
+    }else{
+        invite = false;
+    }
     
     if(session && token){
-        //console.log(token);
-        return {props: { session: session, token: token }};
+        
+        return {props: { session: session, token: token, invite, open4biz }};
     }
     else{
-        return {props: { }};
+        return {props: { invite, open4biz }};
     }
 });
 

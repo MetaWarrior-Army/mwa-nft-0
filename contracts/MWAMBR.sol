@@ -13,7 +13,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
 contract MWAMBR is ERC721URIStorage, Ownable {
     uint256 private _tokenIds;
-    uint256 public mintPrice = (0.02 ether);
+    uint256 public mintPrice = (0.00 ether);
     uint256 public supply = 100;
     
     constructor(address initialOwner) Ownable(initialOwner) ERC721("MetaWarrior Army Membership", "MWAMBR") { }

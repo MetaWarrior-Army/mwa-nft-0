@@ -58,6 +58,7 @@ export default async function handler(
                         tx_hash: search_result.rows[0].nft_0_tx,
                         status: "Minted"
                       });
+                      res.status(200);
                       return;
                     }
                     else{
@@ -66,6 +67,7 @@ export default async function handler(
                         tx_hash: '',
                         status: "usernameSecured"
                       });
+                      res.status(200);
                       return;
                     }
                     

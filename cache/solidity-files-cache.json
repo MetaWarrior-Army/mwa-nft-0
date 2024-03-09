@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/home/mwa/www/mwa-nft-0/contracts/MWAMBR.sol": {
-      "lastModificationDate": 1708476383610,
-      "contentHash": "2ed9a57e7ac2b2268c8299aa8e8e8b4c",
+      "lastModificationDate": 1709936117076,
+      "contentHash": "5083053b1d386b19c5bc3dcc1da15116",
       "sourceName": "contracts/MWAMBR.sol",
       "solcConfig": {
         "version": "0.8.24",
