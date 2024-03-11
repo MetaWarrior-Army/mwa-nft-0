@@ -150,6 +150,7 @@ function Index({ session, token, tokenURI, invite, username }: any) {
                 {ensAvatar && <img alt="ENS Avatar" src={ensAvatar} />}
                 {address && <div className="text-info">{ensName ? `${ensName} (${address})` : address}</div>}
             </div>
+            <h3><b>{username}</b></h3>
             <br></br>
             
             <hr/>

@@ -124,21 +124,16 @@ function Index({ session, token, invite, open4biz }) {
             });
         }
         spinner.hidden = true;
-        
     };
 
     const submitInviteCode = async () => {
         const inputInviteCode = document.getElementById("invitecode");
         push('https://nft.metawarrior.army/?invite='+inputInviteCode.value);
-
     }
 
-    const logoutURL = project.OAUTH_LOGOUT_URL+process.env.OAUTH_CLIENTID+"&id_token_hint="+token.id_token+"&post_logout_redirect_uri="+encodeURIComponent("https://nft.metawarrior.army/logout");
-
     const logout = async () => {
-        //console.log(logoutURL);
+        const logoutURL = project.OAUTH_LOGOUT_URL+process.env.OAUTH_CLIENTID+"&id_token_hint="+token.id_token+"&post_logout_redirect_uri="+encodeURIComponent("https://nft.metawarrior.army/logout");
         push(logoutURL);
-        
     };
 
     //Build NFT
@@ -266,11 +261,6 @@ function Index({ session, token, invite, open4biz }) {
                         </>
                     )
                 }
-              
-                
-                
-                
-    
                 
                 <br></br>
                 
@@ -325,7 +315,6 @@ function Index({ session, token, invite, open4biz }) {
                         </div>
                         <br></br>
                         
-                        
                     </div>
                 </div>
     
@@ -335,9 +324,8 @@ function Index({ session, token, invite, open4biz }) {
                     hidden={!session ? false : true}>Login
                 </button>
                 
-                
                 <div className="mt-5">
-                    <a className="small link-secondary" href={logoutURL}>logout</a>
+                    <a className="small link-secondary" href="#" onClick={() => logout()}>logout</a>
                 </div>
               </div>
             </div>
@@ -467,11 +455,35 @@ export const getServerSideProps = (async (context) => {
                 invite = false;
             }
         }
-        mwa_db_conn.end();
 
     }else{
         invite = false;
     }
+
+    // Let's check to see if the user has already secured a username
+    if(invite){
+        if(session.user.address){
+            const user_query = "SELECT * FROM users WHERE address='"+session.user.address+"'"
+            const user_result = await mwa_db_conn.query(user_query)
+            if(user_result){
+                if(user_result.rowCount > 0){
+                    //console.log(user_result.rows[0])
+                    if(user_result.rows[0].username !== null){
+                        //console.log(user_result.rows[0].username)
+                        const mintUrl = project.MINT_URL+'ipfs://'+user_result.rows[0].nft_0_cid+'&invite='+invite
+                        return {redirect: {
+                            destination: mintUrl,
+                            permanent: false,
+                        }};
+                        
+                    }
+                }
+            }
+        }
+    }
+
+    mwa_db_conn.end();
+
     
     if(session && token){
         
