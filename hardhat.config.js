@@ -42,7 +42,7 @@ module.exports = {
 
      sepolia: {
       chainId: 11155111,
-      url: 'https://eth-sepolia.g.alchemy.com/v2/PNbTzCQq26yaWkmn-6HqWdB6lCe3SHtk',
+      url: 'https://eth-sepolia.g.alchemy.com/v2/X02YuviOcTbEO3RgVIC06C_p5lg9e6cY',
       //url: 'https://dawn-lingering-hexagon.ethereum-sepolia.quiknode.pro/fc177ac80869f096c78ed635a93d671fedd523fe/',
       //url: 'https://rpc2.sepolia.org',
       from: `${process.env.WALLET_PUBLIC_KEY}`,

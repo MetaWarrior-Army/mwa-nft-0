@@ -192,11 +192,16 @@ function Index({ session, token, tokenURI, invite, username }: any) {
                 onClick={() => writeContract(data!.request)}
                 >Mint NFT</button>
 
-            <button hidden={
+            <div hidden={
                 isConnected ? 
                     walletMatch ? 
                     (typeof chain != 'undefined' && chain.id == sepolia.id) ? true : false : true : true
-                } className="btn btn-secondary btn-lg w-100 mt-3 mb-3" onClick={() => switchChain({chainId: sepolia.id})}>Switch Network</button>
+                } >
+                <button className="btn btn-secondary btn-lg w-100 mt-3 mb-3" onClick={() => switchChain({chainId: sepolia.id})}>Switch Network</button>
+                <p className="small">If using a mobile wallet you might want to disconnect, connect to the right network, and try again.</p>
+
+            </div>
+            
             
             <div id="connector_group" hidden={isConnected ? true : false}>
                 <h5>Connect your wallet</h5>

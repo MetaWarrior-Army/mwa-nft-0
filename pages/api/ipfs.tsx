@@ -11,6 +11,11 @@ import { authOptions } from "@/src/authOptions";
 import { filesFromPaths } from 'files-from-path';
 // Web3.Storage
 import {client} from '../../src/web3storage.jsx';
+
+// Blockies
+import { createCanvas } from 'canvas'; 
+import { renderIcon } from '@download/blockies';
+
 // Setup DB Connection
 const ipfs_db_conn = new Pool({
   user: process.env.PGSQL_USER,
@@ -56,14 +61,22 @@ export default async function handler(
     */
     // For generating user avatar
     // Write avatar to filesystem
-    // Custom identicon style
-    // https://jdenticon.com/icon-designer.html?config=6b80330010770a022f431c30
-    const jdenticon = require('jdenticon');
+    const canvas = createCanvas(50, 50);
+    var icon = renderIcon(
+      { // All options are optional
+          seed: address.toLowerCase(), // seed used to generate icon data, default: random
+          size: 8, // width/height of the icon in blocks, default: 10
+          scale: 8 // width/height of each block in pixels, default: 5
+      },
+      canvas
+    );
+    const img = canvas.toDataURL()
+    const data = img.replace(/^data:image\/\w+;base64,/, "");
+    const buf = Buffer.from(data, "base64");
     const fs = require('fs');
-    const avatar = jdenticon.toPng(address,100);
     const filename = process.env.NFT_AVATAR_PATH+address+process.env.NFT_IMAGE_FILEEXT;
     // Save image to Filesystem
-    fs.writeFileSync(filename,avatar);
+    fs.writeFileSync(filename,buf);
     
     //console.log("uploadIPFS");
     //console.log(filename);

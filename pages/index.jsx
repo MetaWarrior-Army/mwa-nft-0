@@ -35,6 +35,14 @@ function Index({ session, token, invite, open4biz }) {
         const userObj = JSON.parse(session.user.profile.userObj);
         //console.log(session);
     }
+    else{
+        if(invite){
+            // Vaid invite, check if user is logged in, if not, redirect
+            if(!session){
+                signIn("MWA")
+            }
+        }
+    }
 
 
     // ToS Check
@@ -125,9 +133,9 @@ function Index({ session, token, invite, open4biz }) {
 
     }
 
+    const logoutURL = project.OAUTH_LOGOUT_URL+process.env.OAUTH_CLIENTID+"&id_token_hint="+token.id_token+"&post_logout_redirect_uri="+encodeURIComponent("https://nft.metawarrior.army/logout");
 
     const logout = async () => {
-        const logoutURL = project.OAUTH_LOGOUT_URL+process.env.OAUTH_CLIENTID+"&id_token_hint="+token.id_token+"&post_logout_redirect_uri="+encodeURIComponent("https://nft.metawarrior.army/logout");
         //console.log(logoutURL);
         push(logoutURL);
         
@@ -212,7 +220,6 @@ function Index({ session, token, invite, open4biz }) {
     if(!open4biz){
         return(
             <>
-            <Script src="https://cdn.jsdelivr.net/npm/jdenticon@3.2.0/dist/jdenticon.min.js" integrity="sha384-yBhgDqxM50qJV5JPdayci8wCfooqvhFYbIKhv0hTtLvfeeyJMJCscRfFNKIxt43M" crossOrigin="anonymous"/>
             <Head>
               <title>{page_title}</title>
               <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
@@ -225,7 +232,6 @@ function Index({ session, token, invite, open4biz }) {
                     <p className="small">Sign up for our <a href="https://www.metawarrior.army/sitrep" className="link-info">newsletter</a> to be the first to find out when new opportunities to join the MetaWarrior Army open up!</p>
                 </div>
             </div>
-            
             </>
 
         );
@@ -233,7 +239,6 @@ function Index({ session, token, invite, open4biz }) {
     else if(invite){
         return (
             <>
-            <Script src="https://cdn.jsdelivr.net/npm/jdenticon@3.2.0/dist/jdenticon.min.js" integrity="sha384-yBhgDqxM50qJV5JPdayci8wCfooqvhFYbIKhv0hTtLvfeeyJMJCscRfFNKIxt43M" crossOrigin="anonymous"/>
             <Head>
               <title>{page_title}</title>
               <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
@@ -258,12 +263,6 @@ function Index({ session, token, invite, open4biz }) {
                         <small>Choose your username, mint your membership, and join the MetaWarrior Army as a Founding Member!</small>
                         <p className="lead">Mint Price: <span className="text-info">FREE</span></p><p className="small text-warning"><i>You will need a little ETH to cover gas fees.</i></p>
                         <hr/>
-                        <div id="avatar_div">
-                            
-
-
-
-                        </div>
                         </>
                     )
                 }
@@ -331,19 +330,14 @@ function Index({ session, token, invite, open4biz }) {
                 </div>
     
                 <button id="login" type="submit"
-                            onClick={() => signIn("MWA")}
-                            className="btn btn-secondary btn-lg w-100 mt-3"
-                            hidden={!session ? false : true}>Login
-                        </button>
-                <button id="logout" type="submit"
-                    onClick={() => logout()}
-                    className="btn btn-secondary btn-lg w-100"
-                    hidden={
-                        !session ? true: false
-                    }>Logout
+                    onClick={() => signIn("MWA")}
+                    className="btn btn-secondary btn-lg w-100 mt-3"
+                    hidden={!session ? false : true}>Login
                 </button>
                 
+                
                 <div className="mt-5">
+                    <a className="small link-secondary" href={logoutURL}>logout</a>
                 </div>
               </div>
             </div>
@@ -354,7 +348,6 @@ function Index({ session, token, invite, open4biz }) {
     else{
         return(
         <>
-        <Script src="https://cdn.jsdelivr.net/npm/jdenticon@3.2.0/dist/jdenticon.min.js" integrity="sha384-yBhgDqxM50qJV5JPdayci8wCfooqvhFYbIKhv0hTtLvfeeyJMJCscRfFNKIxt43M" crossOrigin="anonymous"/>
             <Head>
               <title>{page_title}</title>
               <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
@@ -363,9 +356,6 @@ function Index({ session, token, invite, open4biz }) {
             <div className="card text-bg-dark rounded shadow d-flex mx-auto mb-3" style={{width: 30+'rem'}}>
             <img className="rounded w-25 mx-auto mt-3" src={page_icon_url} alt="image cap"/>
             <div className="card-body">
-
-
-
                 <p className="lead mt-3 mb-3 p-3">An invite code is required to join MetaWarrior Army</p>
                 <p className="small mt-3 mb-3 p-3 text-info">*Invite codes are case sensitive</p>
                 <div className="form-group">
@@ -442,6 +432,7 @@ export const getServerSideProps = (async (context) => {
                     // no more supply
                     invite = false;
                 }
+                // Valid invite
             }
             else{
                 // Not a Master Code, is it a user code?
