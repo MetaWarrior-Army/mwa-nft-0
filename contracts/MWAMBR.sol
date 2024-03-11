@@ -24,7 +24,7 @@ contract MWAMBR is ERC721URIStorage, Ownable {
         payable
         returns (uint256)
     {
-        //require(balanceOf(msg.sender) == 0, "Max Mint per wallet reached");
+        require(balanceOf(msg.sender) == 0, "Max Mint per wallet reached");
         require(msg.value == mintPrice, "0.02 ETH to Mint");
         uint256 tokenId = _tokenIds;
         require(tokenId < supply, "No more NFTs");

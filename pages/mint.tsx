@@ -130,6 +130,11 @@ function Index({ session, token, tokenURI, invite, username }: any) {
     }
     //////////////////////////////////////
 
+    const logout = async () => {
+        const logoutURL = project.OAUTH_LOGOUT_URL+process.env.OAUTH_CLIENTID+"&id_token_hint="+token.id_token+"&post_logout_redirect_uri="+encodeURIComponent("https://nft.metawarrior.army/logout");
+        push(logoutURL);
+    };
+
     // RETURN HTML PAGE
     return (
         <>
@@ -218,6 +223,10 @@ function Index({ session, token, tokenURI, invite, username }: any) {
             </div>
             <div hidden={isConnected ? false : true}>
                 <button className="btn btn-outline-warning btn-lg w-100 mt-3 mb-3" onClick={() => disconnect()}>Disconnect Wallet</button>
+            </div>
+
+            <div className="mt-5">
+                <a className="small link-secondary" href="#" onClick={() => logout()}>logout</a>
             </div>
           </div>
         </div>

@@ -462,20 +462,22 @@ export const getServerSideProps = (async (context) => {
 
     // Let's check to see if the user has already secured a username
     if(invite){
-        if(session.user.address){
-            const user_query = "SELECT * FROM users WHERE address='"+session.user.address+"'"
-            const user_result = await mwa_db_conn.query(user_query)
-            if(user_result){
-                if(user_result.rowCount > 0){
-                    //console.log(user_result.rows[0])
-                    if(user_result.rows[0].username !== null){
-                        //console.log(user_result.rows[0].username)
-                        const mintUrl = project.MINT_URL+'ipfs://'+user_result.rows[0].nft_0_cid+'&invite='+invite
-                        return {redirect: {
-                            destination: mintUrl,
-                            permanent: false,
-                        }};
-                        
+        if(session){
+            if(session.user.address){
+                const user_query = "SELECT * FROM users WHERE address='"+session.user.address+"'"
+                const user_result = await mwa_db_conn.query(user_query)
+                if(user_result){
+                    if(user_result.rowCount > 0){
+                        //console.log(user_result.rows[0])
+                        if(user_result.rows[0].username !== null){
+                            //console.log(user_result.rows[0].username)
+                            const mintUrl = project.MINT_URL+'ipfs://'+user_result.rows[0].nft_0_cid+'&invite='+invite
+                            return {redirect: {
+                                destination: mintUrl,
+                                permanent: false,
+                            }};
+                            
+                        }
                     }
                 }
             }
@@ -483,7 +485,6 @@ export const getServerSideProps = (async (context) => {
     }
 
     mwa_db_conn.end();
-
     
     if(session && token){
         
