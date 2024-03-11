@@ -2,7 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 //Next Auth Server Session
 import { getServerSession, NextAuthOptions } from "next-auth";
-import { authOptions } from "./auth/[...nextauth]";
+import { authOptions } from "@/src/authOptions";
 //DB Connection
 import { Pool } from "pg";
 const isuser_db_conn = new Pool({

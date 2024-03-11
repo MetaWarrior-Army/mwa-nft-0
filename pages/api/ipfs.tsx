@@ -4,7 +4,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { Pool } from "pg";
 //Next Auth Server Session
 import { getServerSession, NextAuthOptions } from "next-auth";
-import { authOptions } from "./auth/[...nextauth]";
+import { authOptions } from "@/src/authOptions";
 
 // for reading files into blob streams for web3Client upload.
 // @ts-ignore 
@@ -48,11 +48,12 @@ export default async function handler(
   
   if(req.method == 'POST'){
     // Some stats about the NFT we're creating
-    //console.log("test: "+test);
-    //console.log("nonce: "+nonce);
-    //console.log("username: "+username);
-    //console.log("address: "+address);
-    
+    /*
+    console.log("test: "+test);
+    console.log("nonce: "+nonce);
+    console.log("username: "+username);
+    console.log("address: "+address);
+    */
     // For generating user avatar
     // Write avatar to filesystem
     // Custom identicon style
@@ -127,13 +128,14 @@ export default async function handler(
 
     try{
         // WRITE NFT JSON TO FILESYSTEM
+        //console.log("Writing JSON to FS")
         fs.writeFileSync(nftPath,nftJSONString);
         //const nft_cid = client.addAll(globSource(String(process.env.NFT_JSON_PATH), address+'*'));
         const nft_files = await filesFromPaths(nftPath);
         const nft_cid = await client.uploadFile(nft_files[0]);
         // GET NFT JSON CID
         nftCID = nft_cid;
-        //console.log(nftCID);
+        //console.log("NFT CID: "+nftCID);
     }
     catch(error){
         console.log(error);
@@ -145,6 +147,7 @@ export default async function handler(
     try {
       //console.log("SEARCHING FOR USERS");
       const search_query = 'SELECT * FROM users WHERE address=\''+address+'\'';
+      //console.log(search_query)
       const search_result = await ipfs_db_conn.query(search_query);
       
       if(search_result.rowCount != null){

@@ -2,7 +2,7 @@
 import { useSession, getCsrfToken, signIn, signOut } from "next-auth/react";
 import { getToken } from "next-auth/jwt"
 import { getServerSession } from "next-auth";
-import { authOptions } from "./api/auth/[...nextauth]";
+import { authOptions } from "@/src/authOptions";
 // NextJS helpers
 import { useEffect, useState, useRef } from 'react';
 // Push

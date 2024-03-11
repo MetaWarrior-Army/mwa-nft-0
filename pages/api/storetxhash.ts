@@ -2,7 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 //Next Auth Server Session
 import { getServerSession, NextAuthOptions } from "next-auth";
-import { authOptions } from "./auth/[...nextauth]";
+import { authOptions } from "@/src/authOptions";
 //DB Connection
 import { Pool } from "pg";
 const storetx_db_conn = new Pool({
@@ -64,9 +64,9 @@ export default async function handler(
   const { nonce, address, tx_hash, username, tokenid, invite_code } = req.body;
 
   if(req.method == 'POST'){
-    console.log("storetxhash POST received")
+    //console.log("storetxhash POST received")
     if(address && tx_hash){
-      console.log("TokenId: "+tokenid);
+      //console.log("TokenId: "+tokenid);
 
       // Okay, we have a tx hash
       // We need to make sure it's successful before continuing.
@@ -124,10 +124,10 @@ export default async function handler(
           if(check_codes_result.rowCount > 0){
               // This is a valid Master Code
               // Increment Master Code Usage
-              let times_used = check_codes_result.rows[0].times_used;
-              console.log("Current times_used: "+times_used);
+              let times_used = parseInt(check_codes_result.rows[0].times_used);
+              //console.log("Current times_used: "+times_used);
               times_used += 1;
-              console.log("New times_used: "+times_used);
+              //console.log("New times_used: "+times_used);
               const increment_mc_query = "UPDATE codes SET times_used = "+times_used+" WHERE code='"+invite_code+"'";
               const increment_mc_result = await storetx_db_conn.query(increment_mc_query);
           }
@@ -139,7 +139,7 @@ export default async function handler(
                   if(check_userinvite_result.rowCount > 0) {
                       // This is a valid user invite code
                       // increment the number of referrals
-                      let times_used = check_userinvite_result.rows[0].num_referrals;
+                      let times_used = parseInt(check_userinvite_result.rows[0].num_referrals);
                       times_used += 1;
                       const increment_referral_query = "UPDATE users SET num_referrals = "+times_used+" WHERE invite_code='"+invite_code+"'";
                       const increment_referral_result = await storetx_db_conn.query(increment_referral_query);
@@ -162,7 +162,7 @@ export default async function handler(
                   // This is a valid user invite code
                   // This is a valid user invite code
                       // increment the number of referrals
-                      let times_used = check_userinvite_result.rows[0].num_referrals;
+                      let times_used = parseInt(check_userinvite_result.rows[0].num_referrals);
                       times_used += 1;
                       const increment_referral_query = "UPDATE users SET num_referrals = "+times_used+" WHERE invite_code='"+invite_code+"'";
                       const increment_referral_result = await storetx_db_conn.query(increment_referral_query);

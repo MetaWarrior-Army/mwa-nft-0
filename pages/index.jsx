@@ -5,26 +5,15 @@
 * url: https://www.metawarrior.army
 */
 // DEPENDENCIES
-// Web3 helpers
-import { useAccount, 
-    useNetwork, 
-    useConnect, 
-    useDisconnect, 
-    useSwitchNetwork } from "wagmi";
-
-// chains
-// import { polygon, polygonZkEvmTestnet, sepolia, optimismSepolia } from "wagmi/chains";
-// import { op_sepolia } from '../src/op_sepolia.ts';
 
 // NextJS helpers
-import { useEffect, useState, useRef } from 'react';
 import Head  from "next/head";
 import Script from "next/script";
 //Next Auth Server Session
 import { signIn } from "next-auth/react";
 import { getToken } from "next-auth/jwt"
 import { getServerSession } from "next-auth";
-import { authOptions } from "./api/auth/[...nextauth]";
+import { authOptions } from "@/src/authOptions";
 // PROJECT CONFIG
 import { project } from '../src/config.jsx';
 //DB Connection
@@ -41,57 +30,12 @@ function Index({ session, token, invite, open4biz }) {
     // Project configuration
     const page_title = "Mint NFT "+project.PROJECT_NAME;
     const page_icon_url = project.PROJECT_ICON_URL;
-    const [ isUser, setIsUser ] = useState(false);
-    const [ txHash, setTxHash ] = useState(false);
 
-    // Setup Web3 Connectors
-    const { chain } = useNetwork();
-    const { connectAsync, connectors, pendingConnector } = useConnect({
-        onError(error){
-            const web3_error = document.getElementById('web3_error');
-            web3_error.innerText = error.message;
-        },
-        // This runs the first time a user connects their wallet
-        onSuccess(data) {
-            const web3_success = document.getElementById('web3_success');
-            const web3_error = document.getElementById('web3_error');
-            web3_success.innerText = "Wallet connected!";
-            web3_error.innerText = "";
-            jdenticon.update('#avatar',data.account);
+    if(session){
+        const userObj = JSON.parse(session.user.profile.userObj);
+        //console.log(session);
+    }
 
-            // Check for current user
-            fetch(project.IS_USER_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-type': 'application/json',
-                },
-                body: JSON.stringify({address: data.account})
-                }).then((response) => {
-                    return response.json();            
-                }).then((data) => {
-                    if(data.username){
-                        if(data.status == 'unknownUser'){
-                            push('https://www.metawarrior.army/signup');
-                        }
-                        else if(data.status == 'newUser'){
-                        }
-                        else if(data.status == 'usernameSecured') {
-                            setIsUser(data.username);   
-                        }
-                        else if(data.status == 'Minted'){
-                            setIsUser(data.username);
-                            setTxHash(data.tx_hash);
-                        }
-                    }
-                    else{
-                    }
-            });
-        }
-    });
-    const { disconnectAsync } = useDisconnect();
-    const { isConnected, address } = useAccount();
-    // Setup smart contract TX
-    const { switchNetwork } = useSwitchNetwork();
 
     // ToS Check
     const tosCheck = async (event) => {
@@ -102,7 +46,6 @@ function Index({ session, token, invite, open4biz }) {
         else{
             username_input.disabled = true;
         }
-        //console.log(event.target.checked);
     }
 
     // SCREEN USERNAMES
@@ -182,15 +125,6 @@ function Index({ session, token, invite, open4biz }) {
 
     }
 
-    // CONNECT WEB3 WALLET
-    const connectWallet = async ({connector}) => {
-        // if connected, disconnect
-        if (isConnected) {
-          await disconnectAsync();
-        }
-        // get account and chain data
-        const { account, chain } = await connectAsync({connector: connector, chainId: project.BLOCKCHAIN_ID});
-    };
 
     const logout = async () => {
         const logoutURL = project.OAUTH_LOGOUT_URL+process.env.OAUTH_CLIENTID+"&id_token_hint="+token.id_token+"&post_logout_redirect_uri="+encodeURIComponent("https://nft.metawarrior.army/logout");
@@ -257,7 +191,7 @@ function Index({ session, token, invite, open4biz }) {
             headers: {
                 'Content-type': 'application/json',
             },
-            body: JSON.stringify({test: 'test', username: usernameLowered, address: address})
+            body: JSON.stringify({test: 'test', username: usernameLowered, address: session.user.address})
             }).then((response) => {
                 return response.json();            
             }).then((data) => {
@@ -272,61 +206,7 @@ function Index({ session, token, invite, open4biz }) {
         // IPFS Token URI Ready, forward to mint tx
         push(project.MINT_URL+'ipfs://'+NFT+'&invite='+invite);
     }
-   
-    const checkConnection = async () => {
-        if(!isUser || !txHash){
-            try{
-                if(isConnected){
-                    // Need to validate isUser and txHash
-                    // Check for current user
-                    fetch(project.IS_USER_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-type': 'application/json',
-                        },
-                        body: JSON.stringify({address: address})
-                        }).then((response) => {
-                            return response.json();            
-                        }).then((data) => {
-                            if(data){
-                                if(data.status == 'unknownUser'){
-                                    disconnectAsync();
-                                }
-                                else if(data.status == 'Minted'){
-                                    setIsUser(data.username);
-                                    setTxHash(data.tx_hash);
-                                }
-                                else if(data.status == 'usernameSecured'){
-                                    setIsUser(data.username);
-                                }
-                            }
-                            else{
-                            }
-                    });
-                }
-            }
-            catch(error){}
-        }
-    };
 
-    // UI Workaround?
-    checkConnection();
-
-    // This is a workaround for hydration errors 
-    // caused by how we're displaying the 
-    // connector options via connectors.map().
-    // Essentially we just delay rendering slightly.
-    const [hydrated, setHydrated] = useState(false);
-    useEffect(() => {
-        // This forces a rerender, so the value is rendered
-        // the second time but not the first
-        setHydrated(true);
-        
-    }, []);
-    if (!hydrated) {
-        // Returns null on first render, so the client and server match
-        return null;
-    }
 
     // RETURN HTML PAGE
     if(!open4biz){
@@ -363,23 +243,26 @@ function Index({ session, token, invite, open4biz }) {
             <div className="card text-bg-dark rounded shadow d-flex mx-auto mb-3" style={{width: 30+'rem'}}>
               <img className="rounded w-25 mx-auto mt-3" src={page_icon_url} alt="image cap"/>
               <div className="card-body">
-                {
-                    txHash ? (
+                {   (typeof userObj !=='undefined' && userObj.nft_0_tx) ?
+                    (
                         <>
                         <h3 className="card-title">MetaWarrior Army Membership NFT</h3>
-                        <img width="80" src={('/avatars/'+address+'.png')}></img>
-                        <h4 className="card-title">{(isUser)}</h4>
-                        <small><a href={(project.BLOCKEXPLORER+txHash)} className="link-secondary" target="_blank">Transaction</a> | <a href={'/NFTs/'+address+'.json'} className="link-secondary" target="_blank">External</a></small>
+                        <img width="80" src={('/avatars/'+session.user.address+'.png')}></img>
+                        <h4 className="card-title">{(userObj.username)}</h4>
+                        <small><a href={(project.BLOCKEXPLORER+userObj.nft_0_tx)} className="link-secondary" target="_blank">Transaction</a> | <a href={'/NFTs/'+session.user.address+'.json'} className="link-secondary" target="_blank">External</a></small>
                         <hr/>
                         </>
                     ) : (
                         <>
                         <h3 className="card-title">Now Minting Memberships</h3>
                         <small>Choose your username, mint your membership, and join the MetaWarrior Army as a Founding Member!</small>
-                        <p className="lead">Mint Price: <span className="text-info">FREE</span></p><p className="small text-info"><i>You will need a little ETH to cover gas fees.</i></p>
+                        <p className="lead">Mint Price: <span className="text-info">FREE</span></p><p className="small text-warning"><i>You will need a little ETH to cover gas fees.</i></p>
                         <hr/>
                         <div id="avatar_div">
-                            <svg width="80" id="avatar" height="80" data-jdenticon-value={address? address : ''}></svg>
+                            
+
+
+
                         </div>
                         </>
                     )
@@ -387,21 +270,7 @@ function Index({ session, token, invite, open4biz }) {
               
                 
                 
-                <div id="username_prompt">
-                    {
-                        txHash ? (
-                            <>
-                            <a className="btn btn-lg w-100 btn-outline-secondary" href="https://www.metawarrior.army/profile">Return to your Profile</a>
-                            </>
-                        ) : isUser ? (
-                            <span>You're username <b>{(isUser)}</b> has been secured.</span>
-                        ) : isConnected ? (
-                            <span>Choose a username for your wallet address: <p className="text-success">{address? address : null}</p></span>
-                        ) : (
-                            <span>Choose your username at MetaWarrior Army</span>
-                        )
-                    }
-                </div>
+                
     
                 
                 <br></br>
@@ -413,9 +282,8 @@ function Index({ session, token, invite, open4biz }) {
                 <div id="form" hidden=
                     {
                         !session ? true :
-                        txHash ? true :
-                        isUser ? false :
-                        isConnected ? false : true
+                        (typeof userObj !== 'undefined' && userObj.nft_0_tx) ? true :
+                        (typeof userObj !== 'undefined' && userObj.username) ? true : false
                     }>
                     
                     <div className="form-group">
@@ -425,10 +293,13 @@ function Index({ session, token, invite, open4biz }) {
                                 I agree to the <a className="link-light" target="_blank" href="https://www.metawarrior.army/tos">Terms of Service</a>.
                             </label>
                         </div>
+                        <div id="username_prompt">
+                            <span>Choose your username at MetaWarrior Army</span>
+                        </div>
     
                         <div className="input-group mb-2">
                             <div className="input-group-prepend">
-                                <div className="input-group-text" hidden={isUser ? true : false}>
+                                <div className="input-group-text" hidden={(typeof userObj !== 'undefined' && userObj.username) ? true : false}>
                                     <div id="spinner2" className="spinner-border spinner-border-sm text-secondary mb-1" role="status" hidden={true}>
                                         <span className="sr-only"></span>
                                     </div>
@@ -440,55 +311,23 @@ function Index({ session, token, invite, open4biz }) {
                                 className="form-control" 
                                 id="username" 
                                 onChange={screenUsername}
-                                hidden={isUser ? true : false}
-                                defaultValue={isUser ? isUser : ''}
+                                hidden={(typeof userObj !== 'undefined' && userObj.username) ? true : false}
+                                defaultValue={(typeof userObj !== 'undefined' && userObj.username) ? userObj.username : ''}
                                 disabled={true}></input>
                         </div>
                         
                         <p className="small text-danger" id="error_msg"></p>
                         <div>
-                        <button id="zkevm" type="submit" 
-                            onClick={() => switchNetwork(project.BLOCKCHAIN_ID)} 
-                            className="btn btn-outline-info mb-3 btn-lg w-100" 
-                            hidden={
-                                chain ? 
-                                (chain.id != project.BLOCKCHAIN_ID) ? false : true : true
-                            }>Connect to Sepolia</button>
                         <button id="buildNFT" type="submit" 
                             onClick={build_nft} 
                             className="btn btn-secondary btn-lg w-100" 
-                            hidden={isConnected ? false : true} 
-                            disabled={!session ? true :
-                                chain ?
-                                (chain.id != project.BLOCKCHAIN_ID) ? true : false : false
+                            disabled={!session ? true : false
                             }>Build NFT</button>
-                        
-                        
                         </div>
                         <br></br>
                         
                         
                     </div>
-                </div>
-                
-    
-                <div id="connector_group" hidden={ isConnected ? true : false }>
-                    <h5>Connect your wallet.</h5>
-                    {connectors.map((connector) => (
-                        // use this div to help us style the buttons
-                        <div className="w-100" key={connector.id}>
-                            <button type="button" className="btn btn-outline-info btn-lg w-100"
-                                disabled={!connector.ready}
-                                key={connector.id}
-                                onClick={() => connectWallet({connector})}
-                            >
-                            {connector.name}
-                            {!connector.ready && ' (unsupported)'}
-                            {connector.id === pendingConnector?.id &&
-                            ' (connecting)'}
-                            </button>
-                        </div>
-                    ))}
                 </div>
     
                 <button id="login" type="submit"
@@ -505,24 +344,7 @@ function Index({ session, token, invite, open4biz }) {
                 </button>
                 
                 <div className="mt-5">
-                <p className="small text-success" id="web3_success">
-                    {
-                        
-                    }    
-                </p>
                 </div>
-                <div>
-                <p className="small" id="disconnect" hidden={isConnected ? false : true}>
-                    <a className="link-secondary" onClick={() => disconnectAsync()} href="#">disconnect</a>
-                </p>
-                </div>
-                <div>
-                <p className="small text-danger" id="web3_error"
-                    hidden={
-                        txHash ? true : false
-                    }></p>
-                </div>
-    
               </div>
             </div>
             </>
@@ -618,14 +440,7 @@ export const getServerSideProps = (async (context) => {
                 // Check if there is still a supply
                 if(parseInt(check_codes_result.rows[0].times_used) >= parseInt(check_codes_result.rows[0].supply)){
                     // no more supply
-                    console.log("MASTERCODE CONSUMPTION: "+check_codes_result.rows[0].times_used);
-                    console.log("MASTERCODE SUPPLY: "+check_codes_result.rows[0].supply);
                     invite = false;
-                }
-                else{
-                    console.log("MASTERCODE CONSUMPTION: "+check_codes_result.rows[0].times_used);
-                    console.log("MASTERCODE SUPPLY: "+check_codes_result.rows[0].supply);
-                    console.log(invite);
                 }
             }
             else{
