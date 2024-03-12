@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /home/mwa/www/mwa-nft-0
+cd /home/mwa/www/nft.metawarrior.army
 
 npm run start
 

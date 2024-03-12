@@ -149,7 +149,7 @@ function Index({ session, token, tokenURI, invite, username }: any) {
           <img className="rounded w-25 mx-auto mt-3" src={page_icon_url} alt="image cap"/>
           <div className="card-body">
           <h3 className="card-title">Mint Your MetaWarrior Army Membership</h3>
-            <p className="lead">Mint Price: <span className="text-info">FREE</span></p><p className="small text-info"><i>You will need a little ETH to cover gas fees.</i></p>
+            <p className="lead">Mint Price: <span className="text-info">0.02 ETH</span></p>
             <div id="avatar_div" hidden={isConnected ? false : true}>
                 <Blockies seed={address ? address.toLowerCase(): ''} size={8} scale={8}/>
                 {ensAvatar && <img alt="ENS Avatar" src={ensAvatar} />}

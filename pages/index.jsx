@@ -256,7 +256,7 @@ function Index({ session, token, invite, open4biz }) {
                         <>
                         <h3 className="card-title">Now Minting Memberships</h3>
                         <small>Choose your username, mint your membership, and join the MetaWarrior Army as a Founding Member!</small>
-                        <p className="lead">Mint Price: <span className="text-info">FREE</span></p><p className="small text-warning"><i>You will need a little ETH to cover gas fees.</i></p>
+                        <p className="lead">Mint Price: <span className="text-info">0.02 ETH</span></p>
                         <hr/>
                         </>
                     )
