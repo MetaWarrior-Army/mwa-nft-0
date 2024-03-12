@@ -1,4 +1,4 @@
-# mwa-user-nft
+# nft.metawarrior.army
 
 MetaWarrior Army NFT 
 
