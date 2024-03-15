@@ -17,7 +17,7 @@ export default function Header({id_token}) {
           <img src={project.PROJECT_ICON_URL} height="30px"/>
           <ul className="navbar-nav me-auto mb-2 mb-lg-0">
             <li className="nav-item">
-              {(typeof logoutURL !== 'undefined') ? 
+              {(typeof logoutURL !== 'undefined' && id_token !== false) ? 
                 <a className="nav-link link-light" aria-current="page" href={logoutURL}>Logout</a> :
                 ''
               }
