@@ -19,26 +19,24 @@ import { useAccount,
 import { sepolia } from 'wagmi/chains'
 import { contractAbi } from '../src/contract_abi'
 import { Address } from 'viem'
-
-
-// chains
-//import { polygon, polygonZkEvmTestnet, sepolia, optimismSepolia } from "wagmi/chains";
-//import { op_sepolia } from '../src/op_sepolia.ts';
 import { parseEther } from 'viem';
+
 // NextJS helpers
 import { useEffect, useState } from 'react';
 import Head  from "next/head";
 import Script from "next/script";
 import { getToken } from "next-auth/jwt"
 import { getServerSession } from "next-auth";
-//import { authOptions } from "./api/auth/[...nextauth].js";
+import { useRouter } from 'next/router'
+
 import { authOptions } from '../src/authOptions'
 // PROJECT CONFIG
 import { project } from '../src/config.jsx';
 //DB Connection
 import { Pool } from "pg";
+// Header
+import Header from '../src/header';
 
-import { useRouter } from 'next/router'
 
 
 // Blockies
@@ -130,11 +128,6 @@ function Index({ session, token, tokenURI, invite, username }: any) {
     }
     //////////////////////////////////////
 
-    const logout = async () => {
-        const logoutURL = project.OAUTH_LOGOUT_URL+process.env.OAUTH_CLIENTID+"&id_token_hint="+token.id_token+"&post_logout_redirect_uri="+encodeURIComponent("https://nft.metawarrior.army/logout");
-        push(logoutURL);
-    };
-
     // RETURN HTML PAGE
     return (
         <>
@@ -144,6 +137,8 @@ function Index({ session, token, tokenURI, invite, username }: any) {
           <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
           <link rel="icon" type="image/x-icon" href={page_icon_url}></link>
         </Head>
+
+        <Header id_token={(typeof token !== 'undefined') ? token.id_token : false} />
         
         <div className="card text-bg-dark rounded shadow d-flex mx-auto mb-3" style={{width: 30+'rem'}}>
           <img className="rounded w-25 mx-auto mt-3" src={page_icon_url} alt="image cap"/>
@@ -225,9 +220,6 @@ function Index({ session, token, tokenURI, invite, username }: any) {
                 <button className="btn btn-outline-warning btn-lg w-100 mt-3 mb-3" onClick={() => disconnect()}>Disconnect Wallet</button>
             </div>
 
-            <div className="mt-5">
-                <a className="small link-secondary" href="#" onClick={() => logout()}>logout</a>
-            </div>
           </div>
         </div>
         </>

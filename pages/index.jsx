@@ -22,6 +22,8 @@ import { Pool } from "pg";
 import { blocked_users } from "../src/blocked_usernames.jsx";
 // Push
 import { push } from 'next/router';
+// Header
+import Header from '../src/header';
 
 // MAIN APP
 //
@@ -131,11 +133,6 @@ function Index({ session, token, invite, open4biz }) {
         push('https://nft.metawarrior.army/?invite='+inputInviteCode.value);
     }
 
-    const logout = async () => {
-        const logoutURL = project.OAUTH_LOGOUT_URL+process.env.OAUTH_CLIENTID+"&id_token_hint="+token.id_token+"&post_logout_redirect_uri="+encodeURIComponent("https://nft.metawarrior.army/logout");
-        push(logoutURL);
-    };
-
     //Build NFT
     const build_nft = async () => {
         var NFT;
@@ -220,6 +217,8 @@ function Index({ session, token, invite, open4biz }) {
               <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
               <link rel="icon" type="image/x-icon" href={page_icon_url}></link>
             </Head>
+            <Header id_token={(typeof token !== 'undefined') ? token.id_token : false} />
+
             <div className="card text-bg-dark rounded shadow d-flex mx-auto mb-3" style={{width: 30+'rem'}}>
                 <img className="rounded w-25 mx-auto mt-3" src={page_icon_url} alt="image cap"/>
                 <div className="card-body">
@@ -239,6 +238,7 @@ function Index({ session, token, invite, open4biz }) {
               <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
               <link rel="icon" type="image/x-icon" href={page_icon_url}></link>
             </Head>
+            <Header id_token={(typeof token !== 'undefined') ? token.id_token : false} />
             
             <div className="card text-bg-dark rounded shadow d-flex mx-auto mb-3" style={{width: 30+'rem'}}>
               <img className="rounded w-25 mx-auto mt-3" src={page_icon_url} alt="image cap"/>
@@ -308,7 +308,7 @@ function Index({ session, token, invite, open4biz }) {
                         <p className="small text-danger" id="error_msg"></p>
                         <div>
                         <button id="buildNFT" type="submit" 
-                            onClick={build_nft} 
+                            onClick={() => build_nft()} 
                             className="btn btn-secondary btn-lg w-100" 
                             disabled={!session ? true : false
                             }>Build NFT</button>
@@ -324,9 +324,6 @@ function Index({ session, token, invite, open4biz }) {
                     hidden={!session ? false : true}>Login
                 </button>
                 
-                <div className="mt-5">
-                    <a className="small link-secondary" href="#" onClick={() => logout()}>logout</a>
-                </div>
               </div>
             </div>
             </>
@@ -341,6 +338,7 @@ function Index({ session, token, invite, open4biz }) {
               <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
               <link rel="icon" type="image/x-icon" href={page_icon_url}></link>
             </Head>
+            <Header id_token={(typeof token !== 'undefined') ? token.id_token : false} />
             <div className="card text-bg-dark rounded shadow d-flex mx-auto mb-3" style={{width: 30+'rem'}}>
             <img className="rounded w-25 mx-auto mt-3" src={page_icon_url} alt="image cap"/>
             <div className="card-body">
@@ -362,7 +360,7 @@ function Index({ session, token, invite, open4biz }) {
                     <div className=" mb-3 p-3">
                     <button id="submitInviteCode" type="submit" 
                         className="btn btn-secondary btn-lg w-100" 
-                        onClick={submitInviteCode}
+                        onClick={() => submitInviteCode()}
                         >Use Invite Code</button>
                     </div>
                     <br></br>
@@ -488,7 +486,7 @@ export const getServerSideProps = (async (context) => {
     
     if(session && token){
         
-        return {props: { session: session, token: token, invite, open4biz }};
+        return {props: { session, token, invite, open4biz }};
     }
     else{
         return {props: { invite, open4biz }};
