@@ -338,7 +338,7 @@ export const getServerSideProps = (async (context: any) => {
         if(get_username_result.rowCount != null){
             if(get_username_result.rowCount > 0) {
                 username = get_username_result.rows[0].username
-                if(get_username_result.rows[0].nft_0_tx){
+                if(get_username_result.rows[0].nft_0_tx !== null){
                     return {redirect:{
                         destination: 'https://www.metawarrior.army/profile',
                         permanent: false,

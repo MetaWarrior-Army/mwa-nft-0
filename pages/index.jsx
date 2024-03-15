@@ -467,8 +467,9 @@ export const getServerSideProps = (async (context) => {
                 if(user_result.rowCount > 0){
                     //console.log(user_result.rows[0])
                     if(user_result.rows[0].username !== null){
-                        if(user_result.rows[0].nft_0_tx){
+                        if(user_result.rows[0].nft_0_tx !== null){
                             // User already minted
+                            console.log(user_result.rows[0].nft_0_tx)
                             return {redirect:{
                                 destination: 'https://www.metawarrior.army/profile',
                                 permanent: false,
