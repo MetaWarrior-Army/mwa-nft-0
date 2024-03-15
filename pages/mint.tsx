@@ -188,7 +188,7 @@ function Index({ session, token, tokenURI, invite, username }: any) {
                 isConnected ? 
                     walletMatch ? 
                     (typeof chain != 'undefined' && chain.id == sepolia.id) ? (!isConfirmed) ? false : true : true : true : true
-                } className="btn btn-secondary btn-lg w-100 mt-3 mb-3" 
+                } className="btn btn-outline-info btn-lg w-100 mt-3 mb-3" 
                 disabled={!Boolean(data?.request)} 
                 onClick={() => writeContract(data!.request)}
                 >Mint NFT</button>
@@ -198,7 +198,7 @@ function Index({ session, token, tokenURI, invite, username }: any) {
                     walletMatch ? 
                     (typeof chain != 'undefined' && chain.id == sepolia.id) ? true : false : true : true
                 } >
-                <button className="btn btn-secondary btn-lg w-100 mt-3 mb-3" onClick={() => switchChain({chainId: sepolia.id})}>Switch Network</button>
+                <button className="btn btn-outline-info btn-lg w-100 mt-3 mb-3" onClick={() => switchChain({chainId: sepolia.id})}>Switch Network</button>
                 <p className="small">If using a mobile wallet you might want to disconnect, connect to the right network, and try again.</p>
 
             </div>
@@ -333,11 +333,17 @@ export const getServerSideProps = (async (context: any) => {
     // invite code valid, let's grab the username
     let username
     if("address" in session!.user!){
-        const get_username_query = "SELECT username FROM users WHERE address='"+session!.user!.address+"'"
+        const get_username_query = "SELECT * FROM users WHERE address='"+session!.user!.address+"'"
         const get_username_result = await mwa_db_conn.query(get_username_query)
         if(get_username_result.rowCount != null){
             if(get_username_result.rowCount > 0) {
                 username = get_username_result.rows[0].username
+                if(get_username_result.rows[0].nft_0_tx){
+                    return {redirect:{
+                        destination: 'https://www.metawarrior.army/profile',
+                        permanent: false,
+                    }}
+                }
             }
             else{
                 // bad user

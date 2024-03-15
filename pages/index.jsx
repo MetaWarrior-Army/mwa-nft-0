@@ -309,7 +309,7 @@ function Index({ session, token, invite, open4biz }) {
                         <div>
                         <button id="buildNFT" type="submit" 
                             onClick={() => build_nft()} 
-                            className="btn btn-secondary btn-lg w-100" 
+                            className="btn btn-outline-info btn-lg w-100" 
                             disabled={!session ? true : false
                             }>Build NFT</button>
                         </div>
@@ -320,7 +320,7 @@ function Index({ session, token, invite, open4biz }) {
     
                 <button id="login" type="submit"
                     onClick={() => signIn("MWA")}
-                    className="btn btn-secondary btn-lg w-100 mt-3"
+                    className="btn btn-outline-info btn-lg w-100 mt-3"
                     hidden={!session ? false : true}>Login
                 </button>
                 
@@ -359,7 +359,7 @@ function Index({ session, token, invite, open4biz }) {
                     </div>
                     <div className=" mb-3 p-3">
                     <button id="submitInviteCode" type="submit" 
-                        className="btn btn-secondary btn-lg w-100" 
+                        className="btn btn-outline-info btn-lg w-100" 
                         onClick={() => submitInviteCode()}
                         >Use Invite Code</button>
                     </div>
@@ -458,23 +458,28 @@ export const getServerSideProps = (async (context) => {
         invite = false;
     }
 
-    // Let's check to see if the user has already secured a username
+    // Let's check to see if the user has already secured a username or minted
     if(invite){
         if(session){
-            if(session.user.address){
-                const user_query = "SELECT * FROM users WHERE address='"+session.user.address+"'"
-                const user_result = await mwa_db_conn.query(user_query)
-                if(user_result){
-                    if(user_result.rowCount > 0){
-                        //console.log(user_result.rows[0])
-                        if(user_result.rows[0].username !== null){
-                            //console.log(user_result.rows[0].username)
+            const user_query = "SELECT * FROM users WHERE address='"+session.user.address+"'"
+            const user_result = await mwa_db_conn.query(user_query)
+            if(user_result){
+                if(user_result.rowCount > 0){
+                    //console.log(user_result.rows[0])
+                    if(user_result.rows[0].username !== null){
+                        if(user_result.rows[0].nft_0_tx){
+                            // User already minted
+                            return {redirect:{
+                                destination: 'https://www.metawarrior.army/profile',
+                                permanent: false,
+                            }}
+                        }
+                        else{
                             const mintUrl = project.MINT_URL+'ipfs://'+user_result.rows[0].nft_0_cid+'&invite='+invite
                             return {redirect: {
                                 destination: mintUrl,
                                 permanent: false,
                             }};
-                            
                         }
                     }
                 }
